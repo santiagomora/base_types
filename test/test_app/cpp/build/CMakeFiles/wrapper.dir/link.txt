@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -Wall -Wextra -fPIC -O2 -march=native -flto=auto -flto -shared  -o wrapper.cpython-312-x86_64-linux-gnu.so CMakeFiles/wrapper.dir/wrapper.cpp.o CMakeFiles/wrapper.dir/test_app/src/init.cpp.o 

@@ -1,3 +1,0 @@
-/home/smora/sgs/dev/base_types/test/test_app/cpp/build/CMakeFiles/wrapper.dir
-/home/smora/sgs/dev/base_types/test/test_app/cpp/build/CMakeFiles/edit_cache.dir
-/home/smora/sgs/dev/base_types/test/test_app/cpp/build/CMakeFiles/rebuild_cache.dir
