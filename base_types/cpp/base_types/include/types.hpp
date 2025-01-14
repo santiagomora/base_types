@@ -16,12 +16,12 @@
 #include <stdexcept>
 #include <limits>
 #include <pybind11/pybind11.h>
-#include "./macros/definitions.hpp"
-#include "./macros/helper/definition.hpp"
 
 
+#include "./macros/definition.hpp"
 
-// namespace py = pybind11;
+
+namespace py = pybind11;
 namespace pt = boost::posix_time;
 namespace ldt = boost::local_time;
 namespace dt = boost::gregorian;
@@ -64,6 +64,8 @@ public:
     T value () const {
         return *(_value.get());
     }
+
+    virtual std::string to_string () const = 0;
 };
 
 
@@ -80,6 +82,9 @@ private:
 public:
     int_wrapper(const int_wrapper<T>& other) : wrapper<T>(other) {}
     int_wrapper(long int v) : wrapper<T>(check_value(v)) {}
+    std::string to_string() const {
+        return std::to_string(this->value());
+    }
 };
 
 
@@ -96,6 +101,9 @@ private:
 public:
     float_wrapper(const float_wrapper<T>& other) : wrapper<T>(other) {}
     float_wrapper(double v) : wrapper<T>(check_value(v)) {}
+    std::string to_string() const {
+        return std::to_string(this->value());
+    }
 };
 
 
@@ -103,6 +111,9 @@ class bool_py : public wrapper<boolean> {
 HAS_PY_REPRESENTATION(bool_py, value());
 public:
     using wrapper<boolean>::wrapper;
+    std::string to_string() const {
+        return std::to_string(this->value());
+    }
 };
 
 
@@ -156,6 +167,9 @@ HAS_PY_REPRESENTATION(text_py, value());
 public:
     using wrapper<std::string>::wrapper;
     text_py(const text_py& other) : wrapper<std::string>(other) {}
+    std::string to_string() const {
+        return this->value();
+    }
 };
 
 
@@ -172,24 +186,7 @@ public:
     timestamptz_py(std::string value) : 
     wrapper<timestamptz>(parse_from_string(value)) {}
     std::string to_string() const {
-        return pt::to_simple_string((value()).utc_time());
-    }
-};
-
-
-class timetz_py : public wrapper<timetz> {
-HAS_PY_REPRESENTATION(timetz_py, value());
-private:
-    timetz parse_from_string (const std::string value) const {
-        return pt::from_iso_string(value);
-    }
-public:
-    using wrapper<timetz>::wrapper;
-    timetz_py(const timetz_py& other) : wrapper<timetz>(other) {}
-    timetz_py(std::string value) : 
-    wrapper<timetz>(parse_from_string(value)) {}
-    std::string to_string() const {
-        return pt::to_iso_string(value());
+        return to_iso_extended_string(value().utc_time()) + value().zone()->to_posix_string();
     }
 };
 
@@ -197,18 +194,35 @@ public:
 class date_py : public wrapper<date> {
 HAS_PY_REPRESENTATION(date_py, value());
 private:
-    using wrapper<date>::wrapper;
     date parse_from_string (const std::string value) const {
         return (date) dt::from_string(value);
     }
 public:
+    using wrapper<date>::wrapper;
     date_py(const date_py& other) : wrapper<date>(other) {}
     date_py(std::string value) : 
     wrapper<date>(parse_from_string(value)) {}
     std::string to_string() const {
-        return dt::to_simple_string(value());
+        return to_iso_extended_string(value());
     }
 };
+
+
+// class timetz_py : public wrapper<timetz> {
+// HAS_PY_REPRESENTATION(timetz_py, value());
+// private:
+//     timetz parse_from_string (const std::string value) const {
+//         return pt::from_iso_string(value);
+//     }
+// public:
+//     using wrapper<timetz>::wrapper;
+//     timetz_py(const timetz_py& other) : wrapper<timetz>(other) {}
+//     timetz_py(std::string value) : 
+//     wrapper<timetz>(parse_from_string(value)) {}
+//     std::string to_string() const {
+//         return pt::to_iso_string(value());
+//     }
+// };
 
 }
 

@@ -14,49 +14,45 @@ from .check import\
 __all__ = ['this', 'field', 'literal', 'check', 'Operand', 'OperandDefinitionContext', 'builtin', 'enum', 'compound', 'int1', 'int2', 'int4', 'int8', 'float4', 'float8', 'char', 'bool', 'text', 'timestamptz', 'timetz', 'date']
 
 
-class int1(bw.int1, metaclass=builtin):
+class int1(bw.int1_py, metaclass=builtin):
     pass
 
 
-class int2(bw.int2, metaclass=builtin):
+class int2(bw.int2_py, metaclass=builtin):
     pass
 
 
-class int4(bw.int4, metaclass=builtin):
+class int4(bw.int4_py, metaclass=builtin):
     pass
 
 
-class int8(bw.int8, metaclass=builtin):
+class int8(bw.int8_py, metaclass=builtin):
     pass
 
 
-class float4(bw.float4, metaclass=builtin):
+class float4(bw.float4_py, metaclass=builtin):
     pass
 
 
-class float8(bw.float8, metaclass=builtin):
+class float8(bw.float8_py, metaclass=builtin):
     pass
 
 
-class char(bw.int1, metaclass=builtin):
+class bool(bw.bool_py, metaclass=builtin):
     pass
 
 
-class bool(bw.bool, metaclass=builtin):
+class text(bw.text_py, metaclass=builtin):
     pass
 
 
-class text(bw.text, metaclass=builtin):
+class timestamptz(bw.timestamptz_py, metaclass=builtin):
     pass
 
 
-class timestamptz(bw.timestamptz, metaclass=builtin):
-    pass
+# class timetz(bw.timetz_py, metaclass=builtin):
+#     pass
 
 
-class timetz(bw.timetz, metaclass=builtin):
-    pass
-
-
-class date(bw.date, metaclass=builtin):
+class date(bw.date_py, metaclass=builtin):
     pass

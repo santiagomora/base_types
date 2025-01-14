@@ -31,7 +31,7 @@ class compound(type(bw.base)):
             if len(args) > 0 and len(data) > 0:
                 raise ValueError(f'Can instance {self.__class__.__name__} with position parameters or named parameters, not both.')
             if len(args) > 0:
-                data = {name: args[ix] for name, ix in zip(self.__class__.model_fields.keys(), range(0, len(args)))}
+                data = self.__class__.tuple_to_dict(args)
             data = self.__class__.model.__pydantic_validator__.validate_python(data, self_instance=self)
             clsbases[0].__init__(self, *tuple([getattr(data, name) for name in self.__class__.model_fields]))
 
@@ -50,6 +50,9 @@ class compound(type(bw.base)):
         clsbases[0].set_py_cls(rettype)
         rettype._configure_defaults()
         return rettype
+
+    def tuple_to_dict(self, tup: tuple[Any, ...]) -> dict[str, Any]:
+        return {name: tup[ix] for name, ix in zip(self.model_fields.keys(), range(0, len(tup)))}
 
     @property
     @functools.cache
@@ -82,7 +85,17 @@ class compound(type(bw.base)):
     def definition_context(self) -> OperandDefinitionContext:
         pass
 
+    def __attempt_to_create_instance__(self, value: Any, info: core_schema.ValidationInfo):
+        if isinstance(value, self):
+            return value
+        if isinstance(value, tuple):
+            value = self.tuple_to_dict(value)
+        return self(**value)
+
     def __get_pydantic_core_schema__(
         self, source: type, handler: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
-        return handler(source.model)
+        return core_schema.with_info_plain_validator_function(
+            function=self.__attempt_to_create_instance__)
+
+

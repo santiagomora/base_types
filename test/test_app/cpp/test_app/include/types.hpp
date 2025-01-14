@@ -2,26 +2,29 @@
 #define TEST_APP_TYPES
 
 
-#include "./macros/definitions.hpp"
+#include "./definitions.hpp"
 
+// DEBUG clear && g++ -P -E -I/usr/include/boost -I../../../../../base_types/cpp -I./ -I../../../../../../pg_definition/venv/lib/python3.12/site-packages/pybind11/include wrapper.cpp
 
 namespace test_app {
 
-PLAIN_DATACLASS(AUTHOR);
+CPP_DATACLASS(TEST_APP_AUTHOR);
+CPP_DATACLASS(TEST_APP_AUTHORED);
+CPP_DATACLASS(TEST_APP_WITH_TIMESTAMPS);
+CPP_ENUM(TEST_APP_POST_STATUS);
+CPP_DATACLASS(TEST_APP_POST);
+CPP_DATACLASS(TEST_APP_COMMENT);
+CPP_DATACLASS(TEST_APP_COMMENT_POST);
 
-PLAIN_DATACLASS(AUTHORED);
+const author&
+test_function_receives_author_correctly(const author& a);
 
-PLAIN_DATACLASS(WITH_TIMESTAMPS);
+const comment_post&
+test_function_receives_comment_post_correctly(const comment_post&);
 
-ENUM(POST_STATUS);
 
-COMPOSED_DATACLASS(POST);
-
-COMPOSED_DATACLASS(COMMENT);
-
-PLAIN_DATACLASS(COMMENT_POST);
-
-ALIAS(DOMAIN);
+const with_timestamps&
+test_function_receives_wt_subclass_correctly(const with_timestamps&);
 
 }
 

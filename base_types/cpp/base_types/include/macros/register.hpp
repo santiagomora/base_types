@@ -6,56 +6,94 @@
 #include <boost/preprocessor/iteration/iterate.hpp>
 #include <boost/preprocessor/facilities/empty.hpp> 
 #include <boost/preprocessor/stringize.hpp>
+#include "./base.hpp"
 
 
-#define PY_PLAIN_CLASS_DEFINITION(CLASS_DEF, m)\
-py::class_<QUALNAME(CLASS_DEF)>(m, BOOST_PP_STRINGIZE(CLASS(CLASS_DEF)))\
+#define C_PY_MEMBER_REF(r, data, elem)\
+    const T_QUALNAME(BOOST_PP_TUPLE_ELEM(0, elem))& BOOST_PP_TUPLE_ELEM(1, elem)
+
+
+#define C_PY_MEMBER_WRAPPED(r, data, elem)\
+    BOOST_PP_TUPLE_ELEM(1, elem)
+
+
+#define PY_DATACLASS_REGISTER(CLASS_DEF, m)\
+py::class_<T_QUALNAME(T_NAMETUPLE(CLASS_DEF))>(m, BOOST_PP_STRINGIZE(T_NAME(T_NAMETUPLE(CLASS_DEF))))\
 .def(py::init([](\
-    BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_FOR_EACH(CONST_MEMBER_REF, BOOST_PP_EMPTY(), MEMBERS(CLASS_DEF)))\
+    BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(C_PY_MEMBER_REF, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)))\
 ){\
-    return std::unique_ptr<QUALNAME(CLASS_DEF)>(\
-        new QUALNAME(CLASS_DEF)(\
-            BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_FOR_EACH(MEMBER_VALUE, BOOST_PP_EMPTY(), MEMBERS(CLASS_DEF))))\
+    return std::unique_ptr<T_QUALNAME(T_NAMETUPLE(CLASS_DEF))>(\
+        new T_QUALNAME(T_NAMETUPLE(CLASS_DEF))(\
+            BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(C_PY_MEMBER_WRAPPED, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))))\
     );\
 }))\
-.def_static("set_py_cls", &QUALNAME(CLASS_DEF)::set_py_cls)
+.def_static("set_py_cls", &T_QUALNAME(T_NAMETUPLE(CLASS_DEF))::set_py_cls)\
+.def("to_py", &T_QUALNAME(T_NAMETUPLE(CLASS_DEF))::to_py)
 
 
-#define PY_COMPOSED_CLASS_DEFINITION(CLASS_DEF, m)\
-py::class_<QUALNAME(CLASS_DEF)>(m, BOOST_PP_STRINGIZE(CLASS(CLASS_DEF)))\
-.def(py::init([](\
-    BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_FOR_EACH(CONST_MEMBER_REF, BOOST_PP_EMPTY(), COMPOSED_MEMBERS(CLASS_DEF)))\
-){\
-    return std::unique_ptr<QUALNAME(CLASS_DEF)>(\
-        new QUALNAME(CLASS_DEF)(\
-            BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_FOR_EACH(MEMBER_VALUE, BOOST_PP_EMPTY(), COMPOSED_MEMBERS(CLASS_DEF))))\
-    );\
-}))\
-.def_static("set_py_cls", &QUALNAME(CLASS_DEF)::set_py_cls)
+#define E_PY_VALUE(r, data, elem)\
+    .value(BOOST_PP_STRINGIZE(elem), data::elem)
 
 
-#define PY_ENUM_DEFINITION(CLASS_DEF, m)\
-py::enum_<QUALNAME(CLASS_DEF)>(m, BOOST_PP_STRINGIZE(CLASS(CLASS_DEF)))\
-BOOST_PP_SEQ_FOR_EACH(ENUM_VALUE, QUALNAME(CLASS_DEF), MEMBERS(CLASS_DEF))
+#define PY_ENUM_REGISTER(ENUM_DEF, m)\
+py::enum_<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))>(m, BOOST_PP_STRINGIZE(T_NAME(T_NAMETUPLE(ENUM_DEF))))\
+BOOST_PP_SEQ_FOR_EACH(E_PY_VALUE, T_QUALNAME(T_NAMETUPLE(ENUM_DEF)), T_DIRECT_MEMBERS(ENUM_DEF))
 
 
-#define PY_ALIAS_DEFINITION(CLASS_DEF, m)\
-py::class_<QUALNAME(CLASS_DEF)>(m, BOOST_PP_STRINGIZE(CLASS(CLASS_DEF)))\
-.def(py::init([](\
-    const QUALNAME(ALIAS_BASE(CLASS_DEF))& base\
-){\
-    return std::unique_ptr<QUALNAME(CLASS_DEF)>(\
-        new QUALNAME(CLASS_DEF)(base)\
-    );\
-}))\
-.def(py::init([](\
-    const QUALNAME(CLASS_DEF)& base\
-){\
-    return std::unique_ptr<QUALNAME(CLASS_DEF)>(\
-        new QUALNAME(CLASS_DEF)(base)\
-    );\
-}))\
-.def_static("set_py_cls", &QUALNAME(CLASS_DEF)::set_py_cls)
+#define TD_PY_BASE_TYPE_CONSTRUCTOR_(r, data, elem)\
+    .def(py::init([](const T_QUALNAME(T_NAMETUPLE(elem))& other){\
+        return std::unique_ptr<T_QUALNAME(T_NAMETUPLE(data))>(\
+            new T_QUALNAME(T_NAMETUPLE(data))(static_cast<T_BASE_PRIMITIVE(data)>(other.value())));\
+    }))
+
+
+#define TD_PY_PY_TYPE_CONSTRUCTOR(TYPE_DEF)\
+    .def(py::init([](const T_PY_PRIMITIVE(TYPE_DEF)& other){\
+        return std::unique_ptr<T_QUALNAME(T_NAMETUPLE(TYPE_DEF))>(\
+            new T_QUALNAME(T_NAMETUPLE(TYPE_DEF))(other.cast<T_BASE_PRIMITIVE(TYPE_DEF)>()));\
+    }))
+
+
+#define TD_PY_COPY_CONSTRUCTOR(TYPE_DEF)\
+    .def(py::init([](const T_QUALNAME(T_NAMETUPLE(TYPE_DEF))& other){\
+        return T_QUALNAME(T_NAMETUPLE(TYPE_DEF))(other);\
+    }))
+
+
+#define TD_PY_TYPE_CONSTRUCTORS(TYPE_DEF, CONSTRUCTORS)\
+    TD_PY_COPY_CONSTRUCTOR(BOOST_PP_SEQ_HEAD(CONSTRUCTORS))\
+    BOOST_PP_SEQ_FOR_EACH(TD_PY_BASE_TYPE_CONSTRUCTOR_, TYPE_DEF, BOOST_PP_SEQ_TAIL(CONSTRUCTORS))\
+    TD_PY_PY_TYPE_CONSTRUCTOR(TYPE_DEF)
+
+
+#define PY_TYPEDEF_REGISTER(TYPE_DEF, m, VAR_NAME)\
+py::class_<T_QUALNAME(T_NAMETUPLE(TYPE_DEF)), std::unique_ptr<T_QUALNAME(T_NAMETUPLE(TYPE_DEF))>> VAR_NAME(m, BOOST_PP_STRINGIZE(T_NAME(T_NAMETUPLE(TYPE_DEF))));\
+VAR_NAME.def(py::pickle(\
+    [](const T_QUALNAME(T_NAMETUPLE(TYPE_DEF))& a) { return py::make_tuple(a.value()); },\
+    [](py::tuple t) { return T_QUALNAME(T_NAMETUPLE(TYPE_DEF))(t[0].cast<T_BASE_PRIMITIVE(TYPE_DEF)>()); }\
+))\
+TD_PY_TYPE_CONSTRUCTORS(TYPE_DEF, BOOST_PP_CAT(T_MACRO_NAME(TYPE_DEF), _CONSTRUCTORS))\
+.def_static("set_py_cls", &T_QUALNAME(T_NAMETUPLE(TYPE_DEF))::set_py_cls)\
+.def("__str__", &T_QUALNAME(T_NAMETUPLE(TYPE_DEF))::to_string)
+
+
+// #define PY_ALIAS_DEFINITION(CLASS_DEF, m)
+// py::class_<QUALNAME(CLASS_DEF)>(m, BOOST_PP_STRINGIZE(CLASS(CLASS_DEF)))
+// .def(py::init([](
+//     const QUALNAME(ALIAS_BASE(CLASS_DEF))& base
+// ){
+//     return std::unique_ptr<QUALNAME(CLASS_DEF)>(
+//         new QUALNAME(CLASS_DEF)(base)
+//     );
+// }))
+// .def(py::init([](
+//     const QUALNAME(CLASS_DEF)& base
+// ){
+//     return std::unique_ptr<QUALNAME(CLASS_DEF)>(
+//         new QUALNAME(CLASS_DEF)(base)
+//     );
+// }))
+// .def_static("set_py_cls", &QUALNAME(CLASS_DEF)::set_py_cls)
 
 
 #endif

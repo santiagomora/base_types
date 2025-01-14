@@ -4,26 +4,59 @@
 #include <string>
 
 #include "base_types/include/types.hpp"
-#include "base_types/include/register.hpp"
 #include "base_types/include/macros/overload.hpp"
+#include "base_types/include/macros/base.hpp"
+#include "base_types/include/macros/definition.hpp"
+#include "base_types/include/macros/register.hpp"
 
 namespace py = pybind11;
 using namespace btp;
 
+// DEBUG MACROS
+// clear && g++ -P -E -I/usr/include/boost -I./base_types/cpp -I./ -I../../../pg_definition/venv/lib/python3.12/site-packages/pybind11/include wrapper.cpp
+
 
 PYBIND11_MODULE(wrapper, m) {
     py::class_<int>(m, "base").def(py::init());
-    py::class_<int1_py, std::unique_ptr<int1_py>>& i1 = register_int<int1_py>(m, "int1");
-    py::class_<int2_py, std::unique_ptr<int2_py>>& i2 = register_int<int2_py>(m, "int2");
-    py::class_<int4_py, std::unique_ptr<int4_py>>& i4 = register_int<int4_py>(m, "int4");
-    py::class_<int8_py, std::unique_ptr<int8_py>>& i8 = register_int<int8_py>(m, "int8");
-    py::class_<float4_py, std::unique_ptr<float4_py>>& f4 = register_float<float4_py>(m, "float4");
-    py::class_<float8_py, std::unique_ptr<float8_py>>& f8 = register_float<float8_py>(m, "float8");
-    py::class_<bool_py, std::unique_ptr<bool_py>>& bl = register_bool(m, "bool");
-    py::class_<timetz_py, std::unique_ptr<timetz_py>>& tz = register_timetz(m, "timetz");
-    py::class_<timestamptz_py, std::unique_ptr<timestamptz_py>>& dtz = register_timestamptz(m, "timestamptz");
-    py::class_<date_py, std::unique_ptr<date_py>>& dt = register_date(m, "date");
-    py::class_<text_py, std::unique_ptr<text_py>>& tx = register_text(m, "text");
+    PY_TYPEDEF_REGISTER(BTP_BOOLEAN, m, bl);
+    PY_TYPEDEF_REGISTER(BTP_INT1, m, i1);
+    PY_TYPEDEF_REGISTER(BTP_INT2, m, i2);
+    PY_TYPEDEF_REGISTER(BTP_INT4, m, i4);
+    PY_TYPEDEF_REGISTER(BTP_INT8, m, i8);
+    PY_TYPEDEF_REGISTER(BTP_FLOAT4, m, f4);
+    PY_TYPEDEF_REGISTER(BTP_FLOAT8, m, f8);
+    // PY_TYPEDEF_REGISTER(BTP_TIMETZ, m, tz);
+    PY_TYPEDEF_REGISTER(BTP_TIMESTAMPTZ, m, dtz);
+    PY_TYPEDEF_REGISTER(BTP_DATE, m, dt);
+    PY_TYPEDEF_REGISTER(BTP_TEXT, m, tx);
+
+    bl.def("__eq__", [](const bool_py& self, const bool_py& other){
+            return self.value() == other.value();
+        })
+        .def("__eq__", [](const bool_py& self, const py::bool_& other){
+            return self.value() == other.cast<bool>();
+        })
+        .def("__ne__", [](const bool_py& self, const bool_py& other){
+            return self.value() != other.value();
+        })
+        .def("__ne__", [](const bool_py& self, const py::bool_& other){
+            return self.value() != other.cast<bool>();
+        })
+        .def("__and__", [](const bool_py& self, const bool_py& other){
+            return self.value() && other.value();
+        })
+        .def("__and__", [](const bool_py& self, const py::bool_& other){
+            return self.value() && other.cast<bool>();
+        })
+        .def("__or__", [](const bool_py& self, const bool_py& other){
+            return self.value() || other.value();
+        })
+        .def("__or__", [](const bool_py& self, const py::bool_& other){
+            return self.value() || other.cast<bool>();
+        })
+        .def("__str__", [](const bool_py& self){
+            return std::to_string(self.value());
+        });
 
     // int1_py OVERLOADS
     MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, int1_py, long int);
@@ -164,5 +197,10 @@ PYBIND11_MODULE(wrapper, m) {
     MAKE_LOGIC_OPERABLE(f8, float8_py, float8_py);
     MAKE_PY_LOGIC_OPERABLE(f8, py::int_, float8_py, long int);
     MAKE_PY_LOGIC_OPERABLE(f8, py::float_, float8_py, double);
+
+    MAKE_PY_STRING_COMPARABLE(tx, py::str, text_py, std::string);
+    // MAKE_PY_STRING_COMPARABLE(tz, py::str, timetz_py, std::string);
+    MAKE_PY_STRING_COMPARABLE(dtz, py::str, timestamptz_py, std::string);
+    MAKE_PY_STRING_COMPARABLE(dt, py::str, date_py, std::string);
 }
 

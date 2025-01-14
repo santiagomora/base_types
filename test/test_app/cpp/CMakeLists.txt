@@ -12,6 +12,7 @@ find_package(pybind11 REQUIRED)
 pybind11_add_module(${PROJECT_NAME} 
     wrapper.cpp
     test_app/src/init.cpp
+    test_app/src/functions.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE ../../../base_types/cpp/)
