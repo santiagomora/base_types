@@ -544,8 +544,8 @@ class check:
     def validate_value(
         self, value: Any, info: ValidationInfo
     ) -> Any:
-        if self.field_name not in info.data:
-            value = getattr(self._source, '__default__')()
+        # if self.field_name not in info.data:
+        #     return getattr(self._source, '__default__')()
         return self._validate(value, info.data)
 
 

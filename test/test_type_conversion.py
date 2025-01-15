@@ -1,6 +1,7 @@
 import sys
 import base_types as bt
 from datetime import datetime, timezone
+from dataclasses import dataclass
 sys.path.append('.')
 import test_app.types as tat
 import test_app.cpp.wrapper as tw
@@ -79,7 +80,57 @@ def test_functions_gets_called_correctly() -> None:
 
     cp = tw.test_function_receives_comment_post_correctly(test_create_comment_post_from_instances())
 
-    # DOESNT WORK!
+    # DOESNT WORK DOESNT DOWNCAST TO WITH_TIMESTAMPS TYPE!
     # post = tat.post(1, 'test post title', tat.post_status.waiting_approval, 1, 'test post content', datetime.now().isoformat(), datetime.now().isoformat())
     # w = tw.test_function_receives_wt_subclass_correctly(post)
     # print(w)
+
+
+def test_functions_gets_called_correctly() -> None:
+    try:
+        a = tat.authored(-1, 'test content')
+        assert False
+    except ValueError:
+        pass
+    try:
+        a = tat.authored(1, 'test content')
+    except ValueError:
+        assert False
+    try:
+        b = tat.post(1, 'test post title', tat.post_status.waiting_approval, -1, 'test post content', datetime.now().isoformat(), datetime.now().isoformat())
+        assert False
+    except ValueError:
+        pass
+    try:
+        b = tat.post(1, 'test post title', tat.post_status.waiting_approval, -1, 'test post content', datetime.now().isoformat(), datetime.now().isoformat())
+        assert False
+    except ValueError:
+        pass
+    try:
+        b = tat.post(1, 'test post title', tat.post_status.waiting_approval, 11, 'test post content', datetime.now().isoformat(), datetime.now().isoformat())
+        assert False
+    except ValueError:
+        pass
+    try:
+        b = tat.post(1, 'test post title', tat.post_status.waiting_approval, 5, 'test post content', datetime.now().isoformat(), datetime.now().isoformat())
+    except ValueError:
+        assert False
+
+
+def test_defaults_are_applied_correctly() -> None:
+    @dataclass
+    class base:
+        f1: tat.post_status
+        f2: tat.domain
+        @classmethod
+        def set_py_cls(cls, *args):
+            pass
+
+    class test(base, metaclass=bt.compound):
+        f1: tat.post_status
+        f2: tat.domain
+    t = test()
+    assert hasattr(t, 'f1')
+    assert t.f1 == tat.post_status.waiting_approval
+    assert hasattr(t, 'f2')
+    assert t.f2 == tat.domain(1)

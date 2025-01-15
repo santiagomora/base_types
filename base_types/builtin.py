@@ -1,6 +1,7 @@
 from typing import\
     Any,\
-    Optional
+    Optional,\
+    Union
 from pydantic_core import\
     core_schema
 from pydantic import\
@@ -10,6 +11,7 @@ from .check import\
     check,\
     literal,\
     OperandDefinitionContext
+import pydantic_core
 
 
 __all__ = ['builtin']
@@ -18,8 +20,9 @@ __all__ = ['builtin']
 class builtin(type(bw.base)):
     def __new__(
         cls, clsname: str, clsbases: tuple[type],
-        clsdict: dict[str, Any], *, validator: Optional[check] = None,
-        default: Optional[literal] = None
+        clsdict: dict[str, Any], *,
+        validator: Union[check, pydantic_core._pydantic_core.PydanticUndefined] = pydantic_core._pydantic_core.PydanticUndefined,
+        default: Union[literal, pydantic_core._pydantic_core.PydanticUndefined, None] = pydantic_core._pydantic_core.PydanticUndefined
     ) -> type:
 
         if len(clsbases) > 1:
@@ -48,15 +51,15 @@ class builtin(type(bw.base)):
                 '__validator__': __validator__, '__default__': __default__
             })
         clsbases[0].set_py_cls(rettype)
-        if validator is not None:
+        if isinstance(validator, check):
             validator.predicate.propagate_definition(clsbases[0], '', OperandDefinitionContext.BUILTIN_DOMAIN)
-        if default is not None:
+        if isinstance(default, literal):
             default.propagate_definition(clsbases[0], '', OperandDefinitionContext.BUILTIN_DOMAIN)
         return rettype
 
     def __validate_instance__(self, instance):
         ck: Optional[check] = getattr(self, '__validator__')()
-        if ck is not None:
+        if ck != pydantic_core._pydantic_core.PydanticUndefined:
             instance = ck._validate(instance)
         return instance
 

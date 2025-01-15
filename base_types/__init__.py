@@ -1,5 +1,7 @@
 from .builtin import builtin
-from .compound import compound
+from .compound import\
+    compound,\
+    inherits
 from .enums import enum
 import base_types.cpp.wrapper as bw
 from .check import\
@@ -11,7 +13,7 @@ from .check import\
     literal
 
 
-__all__ = ['this', 'field', 'literal', 'check', 'Operand', 'OperandDefinitionContext', 'builtin', 'enum', 'compound', 'int1', 'int2', 'int4', 'int8', 'float4', 'float8', 'char', 'bool', 'text', 'timestamptz', 'timetz', 'date']
+__all__ = ['inherits', 'this', 'field', 'literal', 'check', 'Operand', 'OperandDefinitionContext', 'builtin', 'enum', 'compound', 'int1', 'int2', 'int4', 'int8', 'float4', 'float8', 'char', 'bool', 'text', 'timestamptz', 'timetz', 'date']
 
 
 class int1(bw.int1_py, metaclass=builtin):

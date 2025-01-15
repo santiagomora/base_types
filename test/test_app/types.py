@@ -1,5 +1,7 @@
 import base_types as bt
 import test_app.cpp.wrapper as ta
+from typing_extensions import\
+    Annotated
 
 
 class author(ta.author, metaclass=bt.compound):
@@ -13,24 +15,31 @@ class with_timestamps(ta.with_timestamps, metaclass=bt.compound):
 
 
 class authored(ta.authored, metaclass=bt.compound):
-    author_id: bt.int8
+    author_id: Annotated[
+        bt.int8, bt.check(name='author_id_check', predicate=bt.this() > bt.literal(0))]
     content: bt.text
 
 
-class post_status(ta.post_status, metaclass=bt.enum):
+class post_status(
+    ta.post_status, metaclass=bt.enum,
+    default=ta.post_status.waiting_approval
+):
     pass
 
 
+@bt.inherits(with_timestamps, authored)
 class post(ta.post, metaclass=bt.compound):
     id: bt.int8
     title: bt.text
     status: post_status
-    author_id: bt.int8
+    author_id: Annotated[
+        bt.int8, bt.check(name='author_id_check', predicate=bt.this() < bt.literal(10))]
     content: bt.text
     created_at: bt.timestamptz
     updated_at: bt.timestamptz
 
 
+@bt.inherits(with_timestamps, authored)
 class comment(ta.comment, metaclass=bt.compound):
     id: bt.int8
     post_id: bt.int8

@@ -9,6 +9,7 @@ from pydantic import\
     create_model,\
     BaseModel
 from .check import \
+    check,\
     Operand,\
     OperandDefinitionContext
 import copy
@@ -18,6 +19,20 @@ from pydantic_core import\
     core_schema
 from pydantic import\
     GetCoreSchemaHandler
+import copy
+
+
+def configure_default(
+    name: str, info: FieldInfo, tp: type, definition_context: OperandDefinitionContext
+) -> None:
+    if isinstance(info.default, Operand):
+        info.default.propagate_definition(tp, name, definition_context)
+        # cant have default_factory and default set at the same time
+        default_factory = copy.deepcopy(info.default.value)
+        info.default_factory = lambda value: tp(default_factory(value))
+        info.default = pydantic_core._pydantic_core.PydanticUndefined
+    elif info.default != pydantic_core._pydantic_core.PydanticUndefined:
+        info.default = tp(info.default) if info.default is not None and not isinstance(info.default, tp) else None
 
 
 class compound(type(bw.base)):
@@ -38,14 +53,14 @@ class compound(type(bw.base)):
         def __repr__(self) -> str:
             return f'{self.__class__.__name__}({", ".join([f"{name}={repr(getattr(self, name))}" for name in self.__class__.model_fields])})'
 
-        def __setattr__(self, name: str, value: Any) -> None:
-            raise NotImplementedError
+        # def __setattr__(self, name: str, value: Any) -> None:
+            # raise NotImplementedError
 
         rettype: type = super().__new__(
             cls, clsname, clsbases, namespace | {
                 '__init__': __init__,
                 '__repr__': __repr__,
-                '__setattr__': __setattr__
+                # '__setattr__': __setattr__
             })
         clsbases[0].set_py_cls(rettype)
         rettype._configure_defaults()
@@ -71,14 +86,13 @@ class compound(type(bw.base)):
         for name, info in self.model_fields.items():
             tp: type = info.annotation
             if not info.is_required():
-                if isinstance(info.default, Operand):
-                    info.default.propagate_definition(tp, name, self.definition_context())
-                    # cant have default_factory and default set at the same time
-                    default_factory = copy.deepcopy(info.default.value)
-                    info.default_factory = lambda value: tp(default_factory(value))
-                    info.default = pydantic_core._pydantic_core.PydanticUndefined
-                else:
-                    info.default = tp(info.default) if info.default is not None and not isinstance(info.default, tp) else None
+                configure_default(name, info, tp, self.definition_context())
+            elif hasattr(tp, '__default__'):
+                info.default = getattr(tp, '__default__')()
+                configure_default(name, info, tp, self.definition_context())
+            for meta in info.metadata:
+                if isinstance(meta, check):
+                    meta.predicate.propagate_definition(tp, name, self.definition_context())
         self.model.model_rebuild(force=True)
 
     @abstractmethod
@@ -98,4 +112,60 @@ class compound(type(bw.base)):
         return core_schema.with_info_plain_validator_function(
             function=self.__attempt_to_create_instance__)
 
+
+class inherits:
+    def __init__(
+        self, *bases: Any
+    ) -> None:
+        for base in bases:
+            assert isinstance(base, compound)
+        self.bases = bases
+
+    def _check_consistent_base_class_fields(self, target: type):
+        model_fields: dict[str, FieldInfo] = target.model_fields
+        errors: list[str] = []
+        for base in self.bases:
+            for name, info in base.model_fields.items():
+                if name not in model_fields:
+                    errors.append(f'Field {name} from base {base.__name__} must be present in {target.__name__} definition')
+                    continue
+                if model_fields[name].annotation != info.annotation:
+                    errors.append(f'Field {name} must be of same type as {base.__name__}.{name} in {target.__name__} definition')
+        if len(errors) > 0:
+            raise TypeError(f'Base class errors:\n{"\n".join(errors)}')
+
+    def _inherit_metadata_from_bases(self, target: type) -> None:
+        model_fields: dict[str, FieldInfo] = target.model_fields
+        errors: list[str] = []
+        for base in self.bases:
+            for name, info in base.model_fields.items():
+                tf_info = model_fields[name]
+                tf_info.metadata += info.metadata
+                tp = info.annotation
+                if info.is_required() and tf_info.is_required():
+                    continue
+                elif info.is_required() and not tf_info.is_required():
+                    # parent defines default, child doesnt, pass
+                    pass
+                elif not info.is_required() and not tf_info.is_required():
+                    # each one is required
+                    pass
+                else:
+                    # parent defines default, child doesnt, inherit parents
+                    if isinstance(info.default, Operand):
+                        # cant have default_factory and default set at the same time
+                        default_factory = copy.deepcopy(info.default.value)
+                        tf_info.default_factory = lambda value: tp(default_factory(value))
+                        tf_info.default = pydantic_core._pydantic_core.PydanticUndefined
+                    else:
+                        model_fields[name].default = info.default
+        if len(errors) > 0:
+            raise TypeError(f'Base class errors:\n{"\n".join(errors)}')
+        target.model.model_rebuild(force=True)
+
+    def __call__(self, target: type):
+        assert isinstance(target, compound)
+        self._check_consistent_base_class_fields(target)
+        self._inherit_metadata_from_bases(target)
+        return target
 
