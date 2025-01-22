@@ -9,6 +9,9 @@
 namespace py = pybind11;
 
 
+// DEBUG clear && g++ -P -E -I/usr/include/boost -I../../../base_types/cpp -I./ wrapper.cpp
+
+
 PYBIND11_MODULE(wrapper, m) {
     PY_DATACLASS_REGISTER(TEST_APP_AUTHOR, m);
     PY_DATACLASS_REGISTER(TEST_APP_AUTHORED, m);

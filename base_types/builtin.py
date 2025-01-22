@@ -1,35 +1,43 @@
 from typing import\
     Any,\
     Optional,\
-    Union
+    Union,\
+    TypeAlias
 from pydantic_core import\
     core_schema
 from pydantic import\
     GetCoreSchemaHandler
 import base_types.cpp.wrapper as bw
-from .check import\
-    check,\
+from .predicate import\
+    LogicOperand,\
     literal,\
     OperandDefinitionContext
 import pydantic_core
+from abc import\
+    abstractmethod
 
 
 __all__ = ['builtin']
+
+
+Undefined = pydantic_core._pydantic_core.PydanticUndefined
+DefaultAlias: TypeAlias = Any
+# DefaultAlias: TypeAlias = Union[literal, Undefined, None]
 
 
 class builtin(type(bw.base)):
     def __new__(
         cls, clsname: str, clsbases: tuple[type],
         clsdict: dict[str, Any], *,
-        validator: Union[check, pydantic_core._pydantic_core.PydanticUndefined] = pydantic_core._pydantic_core.PydanticUndefined,
-        default: Union[literal, pydantic_core._pydantic_core.PydanticUndefined, None] = pydantic_core._pydantic_core.PydanticUndefined
+        check_predicate: Optional[LogicOperand] = None,
+        default: DefaultAlias = Undefined
     ) -> type:
 
         if len(clsbases) > 1:
             raise TypeError(f'Class {cls} doesnt allow multiple bases')
 
-        def __repr__(self):
-            return f'{self.__class__.__name__}({str(self)})'
+        # def __repr__(self):
+        #     return f'{self.__class__.__name__}({str(self)})'
 
         def __init__(self, *args: Any):
             value = clsbases[0](*args)
@@ -38,28 +46,38 @@ class builtin(type(bw.base)):
             clsbases[0].__init__(self, value)
 
         @classmethod
-        def __validator__(cls) -> Optional[check]:
-            return validator
+        def __check_predicate__(cls) -> Optional[LogicOperand]:
+            return check_predicate
 
         @classmethod
-        def __default__(cls) -> Optional[literal]:
+        def __default__(cls) -> DefaultAlias:
             return default
 
         rettype: type = super().__new__(
             cls, clsname, clsbases, clsdict | {
-                '__repr__': __repr__, '__init__': __init__,
-                '__validator__': __validator__, '__default__': __default__
+                # '__repr__': __repr__,
+                '__init__': __init__,
+                '__check_predicate__': __check_predicate__, '__default__': __default__
             })
         clsbases[0].set_py_cls(rettype)
-        if isinstance(validator, check):
-            validator.predicate.propagate_definition(clsbases[0], '', OperandDefinitionContext.BUILTIN_DOMAIN)
+        if isinstance(check_predicate, LogicOperand):
+            check_predicate.source = rettype
+            check_predicate.propagate_definition(clsbases[0], '', rettype.definition_context())
+        elif check_predicate is None:
+            pass
+        else:
+            raise TypeError('Invalid check predicate')
         if isinstance(default, literal):
-            default.propagate_definition(clsbases[0], '', OperandDefinitionContext.BUILTIN_DOMAIN)
+            default.propagate_definition(clsbases[0], '', rettype.definition_context())
+        elif default is None or default is Undefined:
+            pass
+        else:
+            raise TypeError('Invalid default value')
         return rettype
 
     def __validate_instance__(self, instance):
-        ck: Optional[check] = getattr(self, '__validator__')()
-        if ck != pydantic_core._pydantic_core.PydanticUndefined:
+        ck: Optional[LogicOperand] = getattr(self, '__check_predicate__')()
+        if ck is not None:
             instance = ck._validate(instance)
         return instance
 
@@ -75,31 +93,6 @@ class builtin(type(bw.base)):
         return core_schema.with_info_plain_validator_function(
             function=self.__attempt_to_create_instance__)
 
-
-# class check:
-#     def __init__(self, name: str,  predicate: LogicOperand) -> None:
-#         self.check_meta: meta.check = meta.check(name=name, predicate=predicate)
-# 
-#     def __call__(self, target: type):
-#         definition = getattr(target, '__btp_definition')()
-#         assert definition['check'] is None
-#         self.check_meta.predicate.propagate_definition(target, None, OperandDefinitionContext.BUILTIN_DOMAIN)
-#         definition['check'] = self.check_meta
-#         return target
-# 
-# 
-# def default_value(*args, **kwargs):
-# 
-#     def _add_to_definition(target: type):
-#         # esto va a cambiar, no se deberia poder acceder a la definicion directamente
-#         # __btp_definition deberia devolver una copia siempre
-#         # no puede usarse con table o composite
-#         assert hasattr(target.__bases__[0], '__btp_definition')
-#         definition = getattr(target, '__btp_definition')()
-#         assert definition['default'] is None
-#         value: literal = literal(*args, **kwargs)
-#         value.propagate_definition(target, None, OperandDefinitionContext.BUILTIN_DOMAIN)
-#         definition['default'] = value
-#         return target
-# 
-#     return _add_to_definition
+    @abstractmethod
+    def definition_context(self) -> type[OperandDefinitionContext]:
+        pass

@@ -3,8 +3,6 @@
 
 
 #include "base_types/include/macros/definition.hpp"
-// #include "base_types/include/macros/register.hpp"
-#include "base_types/include/types.hpp"
 
 
 #define TEST_APP_AUTHOR DATACLASS_DEFINITION(\

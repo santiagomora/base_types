@@ -13,8 +13,20 @@
     const T_QUALNAME(BOOST_PP_TUPLE_ELEM(0, elem))& BOOST_PP_TUPLE_ELEM(1, elem)
 
 
-#define C_PY_MEMBER_WRAPPED(r, data, elem)\
-    BOOST_PP_TUPLE_ELEM(1, elem)
+#define C_PY_MEMBER_NAME(r, data, i, elem)\
+    BOOST_PP_COMMA_IF(i) BOOST_PP_TUPLE_ELEM(1, elem)
+
+
+#define C_PY_MEMBER_NAME_STR(r, data, i, elem)\
+    BOOST_PP_COMMA_IF(i) BOOST_PP_STRINGIZE(BOOST_PP_TUPLE_ELEM(1, elem))
+
+
+#define C_PY_MEMBER_TP(r, data, i, elem)\
+    BOOST_PP_COMMA_IF(i) py::type::of<T_QUALNAME(BOOST_PP_TUPLE_ELEM(0, elem))>()
+
+
+#define C_PY_BASE_TP(r, data, i, elem)\
+    BOOST_PP_COMMA_IF(i) py::type::of<T_QUALNAME(T_NAMETUPLE(elem))>()
 
 
 #define PY_DATACLASS_REGISTER(CLASS_DEF, m)\
@@ -24,11 +36,20 @@ py::class_<T_QUALNAME(T_NAMETUPLE(CLASS_DEF))>(m, BOOST_PP_STRINGIZE(T_NAME(T_NA
 ){\
     return std::unique_ptr<T_QUALNAME(T_NAMETUPLE(CLASS_DEF))>(\
         new T_QUALNAME(T_NAMETUPLE(CLASS_DEF))(\
-            BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(C_PY_MEMBER_WRAPPED, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))))\
+            BOOST_PP_SEQ_FOR_EACH_I(C_PY_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)))\
     );\
 }))\
 .def_static("set_py_cls", &T_QUALNAME(T_NAMETUPLE(CLASS_DEF))::set_py_cls)\
-.def("to_py", &T_QUALNAME(T_NAMETUPLE(CLASS_DEF))::to_py)
+.def("to_py", &T_QUALNAME(T_NAMETUPLE(CLASS_DEF))::to_py)\
+.def_property_readonly_static("_cpp_field_names", [](const py::object&) -> py::tuple {\
+    return py::make_tuple(BOOST_PP_SEQ_FOR_EACH_I(C_PY_MEMBER_NAME_STR, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)));\
+})\
+.def_property_readonly_static("_cpp_field_types", [](const py::object&) -> py::tuple {\
+    return py::make_tuple(BOOST_PP_SEQ_FOR_EACH_I(C_PY_MEMBER_TP, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)));\
+})\
+.def_property_readonly_static("_cpp_bases", [](const py::object&) -> py::tuple {\
+    return py::make_tuple(BOOST_PP_SEQ_FOR_EACH_I(C_PY_BASE_TP, BOOST_PP_EMPTY(), T_BASES(CLASS_DEF)));\
+})
 
 
 #define E_PY_VALUE(r, data, elem)\

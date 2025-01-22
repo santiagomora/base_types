@@ -10,8 +10,9 @@ import test_app.cpp.wrapper as tw
 def test_types_get_instanced_correctly() -> None:
     try:
         tat.domain(-1)
+        assert False
     except ValueError as e:
-        assert str(e) == 'test: constraint validation failed for value "-1"'
+        pass
     def test_create() -> tat.author:
         id = 1
         name = 'test_author'
@@ -125,6 +126,14 @@ def test_defaults_are_applied_correctly() -> None:
         @classmethod
         def set_py_cls(cls, *args):
             pass
+        @classmethod
+        @property
+        def _cpp_field_names(cls):
+            return ('f1', 'f2', )
+        @classmethod
+        @property
+        def _cpp_field_types(cls):
+            return (tw.post_status, bt.int8, )
 
     class test(base, metaclass=bt.compound):
         f1: tat.post_status
@@ -134,3 +143,58 @@ def test_defaults_are_applied_correctly() -> None:
     assert t.f1 == tat.post_status.waiting_approval
     assert hasattr(t, 'f2')
     assert t.f2 == tat.domain(1)
+
+    try:
+        t2 = test(f2=-1)
+        assert False
+    except ValueError:
+        pass
+    print(type(bt.int8(3) % bt.int1(5)))
+
+
+def test_incomplete_inheritance_is_detected() -> None:
+    try:
+        @bt.inherits(tat.with_timestamps, tat.authored)
+        class comment(tw.comment, metaclass=bt.compound):
+            id: bt.int8
+            post_id: bt.int8
+            author_id: bt.int8
+            content: bt.text
+        assert False
+    except TypeError:
+        pass
+    try:
+        @bt.inherits(tat.with_timestamps, tat.authored)
+        class comment(tw.comment, metaclass=bt.compound):
+            id: bt.int8
+            post_id: bt.int8
+            author_id: bt.int8
+            content: bt.text
+            created_at: bt.timestamptz
+        assert False
+    except TypeError:
+        pass
+    try:
+        @bt.inherits(tat.with_timestamps, tat.authored)
+        class comment(tw.comment, metaclass=bt.compound):
+            id: bt.int8
+            post_id: bt.int8
+            author_id: bt.int8
+            content: bt.text
+            created_at: bt.timestamptz
+            updated_at: bt.timestamptz
+    except TypeError:
+        assert False
+    try:
+        @bt.inherits(tat.with_timestamps, tat.authored)
+        class comment(tw.comment, metaclass=bt.compound):
+            id: bt.int8
+            post_id: bt.int8
+            author_id: bt.int8
+            content: bt.text
+            created_at: bt.int8
+            updated_at: bt.timestamptz
+        assert False
+    except TypeError:
+        pass
+

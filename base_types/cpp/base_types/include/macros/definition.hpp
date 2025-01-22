@@ -7,11 +7,8 @@
 #include <boost/preprocessor/facilities/empty.hpp> 
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
-#include <pybind11/pybind11.h>
 #include "./base.hpp"
 
-
-namespace py = pybind11;
 
 
 # define HAS_PY_REPRESENTATION(name, ...)\

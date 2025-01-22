@@ -17,7 +17,7 @@ using namespace btp;
 
 
 PYBIND11_MODULE(wrapper, m) {
-    py::class_<int>(m, "base").def(py::init());
+    py::class_<py::object>(m, "base");
     PY_TYPEDEF_REGISTER(BTP_BOOLEAN, m, bl);
     PY_TYPEDEF_REGISTER(BTP_INT1, m, i1);
     PY_TYPEDEF_REGISTER(BTP_INT2, m, i2);
@@ -59,20 +59,20 @@ PYBIND11_MODULE(wrapper, m) {
         });
 
     // int1_py OVERLOADS
-    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, int1_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, int2_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, int4_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, int8_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, float4_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, float8_py, long int);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::int_, int1_py, long int);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::float_, int1_py, long int);
+    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, int1_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, int2_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, int4_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, int8_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, float4_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i1, int1_py, float8_py, btp::int8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::int_, int1_py, btp::int8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::float_, int1_py, btp::int8);
     
     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, int1_py, int1_py);
     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, int1_py, int2_py);
     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, int1_py, int4_py);
     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, int1_py, int8_py);
-    REGISTER_PY_ARITHMETIC_OVERLOAD(i1, "__mod__", +, py::int_, int1_py, long int);
+    REGISTER_PY_ARITHMETIC_OVERLOAD(i1, "__mod__", +, py::int_, int1_py, btp::int8);
     
     MAKE_LOGIC_OPERABLE(i1, int1_py, int1_py);
     MAKE_LOGIC_OPERABLE(i1, int1_py, int2_py);
@@ -80,25 +80,25 @@ PYBIND11_MODULE(wrapper, m) {
     MAKE_LOGIC_OPERABLE(i1, int1_py, int8_py);
     MAKE_LOGIC_OPERABLE(i1, int1_py, float4_py);
     MAKE_LOGIC_OPERABLE(i1, int1_py, float8_py);
-    MAKE_PY_LOGIC_OPERABLE(i1, py::int_, int1_py, long int);
-    MAKE_PY_LOGIC_OPERABLE(i1, py::float_, int1_py, double);
+    MAKE_PY_LOGIC_OPERABLE(i1, py::int_, int1_py, btp::int8);
+    MAKE_PY_LOGIC_OPERABLE(i1, py::float_, int1_py, btp::float8);
 
     // int2_py OVERLOADS
-    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, int2_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, int1_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, int2_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, int4_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, int8_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, float4_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, float8_py, long int);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::int_, int2_py, long int);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::float_, int2_py, long int);
+    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, int2_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, int1_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, int2_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, int4_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, int8_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, float4_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i2, int2_py, float8_py, btp::int8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::int_, int2_py, btp::int8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::float_, int2_py, btp::int8);
     
     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, int2_py, int1_py);
     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, int2_py, int2_py);
     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, int2_py, int4_py);
     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, int2_py, int8_py);
-    REGISTER_PY_ARITHMETIC_OVERLOAD(i1, "__mod__", %, py::int_, int2_py, long int);
+    REGISTER_PY_ARITHMETIC_OVERLOAD(i1, "__mod__", %, py::int_, int2_py, btp::int8);
     
     MAKE_LOGIC_OPERABLE(i2, int2_py, int1_py);
     MAKE_LOGIC_OPERABLE(i2, int2_py, int2_py);
@@ -107,24 +107,24 @@ PYBIND11_MODULE(wrapper, m) {
     MAKE_LOGIC_OPERABLE(i2, int2_py, int8_py);
     MAKE_LOGIC_OPERABLE(i2, int2_py, float4_py);
     MAKE_LOGIC_OPERABLE(i2, int2_py, float8_py);
-    MAKE_PY_LOGIC_OPERABLE(i2, py::int_, int2_py, long int);
-    MAKE_PY_LOGIC_OPERABLE(i2, py::float_, int2_py, double);
+    MAKE_PY_LOGIC_OPERABLE(i2, py::int_, int2_py, btp::int8);
+    MAKE_PY_LOGIC_OPERABLE(i2, py::float_, int2_py, btp::float8);
     
     // int4_py OVERLOADS
-    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, int1_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, int2_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, int4_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, int8_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, float4_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, float8_py, long int);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(i4, py::int_, int4_py, long int);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(i4, py::float_, int4_py, long int);
+    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, int1_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, int2_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, int4_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, int8_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, float4_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i4, int4_py, float8_py, btp::int8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(i4, py::int_, int4_py, btp::int8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(i4, py::float_, int4_py, btp::int8);
     
     REGISTER_ARITHMETIC_OVERLOAD(i4, "__mod__", %, int4_py, int1_py);
     REGISTER_ARITHMETIC_OVERLOAD(i4, "__mod__", %, int4_py, int2_py);
     REGISTER_ARITHMETIC_OVERLOAD(i4, "__mod__", %, int4_py, int4_py);
     REGISTER_ARITHMETIC_OVERLOAD(i4, "__mod__", %, int4_py, int8_py);
-    REGISTER_PY_ARITHMETIC_OVERLOAD(i4, "__mod__", %, py::int_, int4_py, long int);
+    REGISTER_PY_ARITHMETIC_OVERLOAD(i4, "__mod__", %, py::int_, int4_py, btp::int8);
     
     MAKE_LOGIC_OPERABLE(i4, int4_py, int1_py);
     MAKE_LOGIC_OPERABLE(i4, int4_py, int2_py);
@@ -132,24 +132,24 @@ PYBIND11_MODULE(wrapper, m) {
     MAKE_LOGIC_OPERABLE(i4, int4_py, int8_py);
     MAKE_LOGIC_OPERABLE(i4, int4_py, float4_py);
     MAKE_LOGIC_OPERABLE(i4, int4_py, float8_py);
-    MAKE_PY_LOGIC_OPERABLE(i4, py::int_, int4_py, long int);
-    MAKE_PY_LOGIC_OPERABLE(i4, py::float_, int4_py, double);
+    MAKE_PY_LOGIC_OPERABLE(i4, py::int_, int4_py, btp::int8);
+    MAKE_PY_LOGIC_OPERABLE(i4, py::float_, int4_py, btp::float8);
     
     // int8_py OVERLOADS
-    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, int1_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, int2_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, int4_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, int8_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, float4_py, long int);
-    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, float8_py, long int);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(i8, py::int_, int8_py, long int);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(i8, py::float_, int8_py, long int);
+    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, int1_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, int2_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, int4_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, int8_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, float4_py, btp::int8);
+    MAKE_ARITHMETIC_COMPATIBLE(i8, int8_py, float8_py, btp::int8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(i8, py::int_, int8_py, btp::int8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(i8, py::float_, int8_py, btp::int8);
     
     REGISTER_ARITHMETIC_OVERLOAD(i8, "__mod__", %, int8_py, int1_py);
     REGISTER_ARITHMETIC_OVERLOAD(i8, "__mod__", %, int8_py, int2_py);
     REGISTER_ARITHMETIC_OVERLOAD(i8, "__mod__", %, int8_py, int4_py);
     REGISTER_ARITHMETIC_OVERLOAD(i8, "__mod__", %, int8_py, int8_py);
-    REGISTER_PY_ARITHMETIC_OVERLOAD(i8, "__mod__", %, py::int_, int8_py, long int);
+    REGISTER_PY_ARITHMETIC_OVERLOAD(i8, "__mod__", %, py::int_, int8_py, btp::int8);
     
     MAKE_LOGIC_OPERABLE(i8, int8_py, int1_py);
     MAKE_LOGIC_OPERABLE(i8, int8_py, int2_py);
@@ -157,18 +157,18 @@ PYBIND11_MODULE(wrapper, m) {
     MAKE_LOGIC_OPERABLE(i8, int8_py, int8_py);
     MAKE_LOGIC_OPERABLE(i8, int8_py, float4_py);
     MAKE_LOGIC_OPERABLE(i8, int8_py, float8_py);
-    MAKE_PY_LOGIC_OPERABLE(i8, py::int_, int8_py, long int);
-    MAKE_PY_LOGIC_OPERABLE(i8, py::float_, int8_py, double);
+    MAKE_PY_LOGIC_OPERABLE(i8, py::int_, int8_py, btp::int8);
+    MAKE_PY_LOGIC_OPERABLE(i8, py::float_, int8_py, btp::float8);
     
     // float4_py OVERLOADS
-    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, int1_py, double);
-    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, int2_py, double);
-    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, int4_py, double);
-    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, int8_py, double);
-    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, float4_py, double);
-    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, float8_py, double);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(f4, py::int_, float4_py, double);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(f4, py::float_, float4_py, double);
+    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, int1_py, btp::float8);
+    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, int2_py, btp::float8);
+    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, int4_py, btp::float8);
+    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, int8_py, btp::float8);
+    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, float4_py, btp::float8);
+    MAKE_ARITHMETIC_COMPATIBLE(f4, float4_py, float8_py, btp::float8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(f4, py::int_, float4_py, btp::float8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(f4, py::float_, float4_py, btp::float8);
     
     MAKE_LOGIC_OPERABLE(f4, float4_py, int1_py);
     MAKE_LOGIC_OPERABLE(f4, float4_py, int2_py);
@@ -176,18 +176,18 @@ PYBIND11_MODULE(wrapper, m) {
     MAKE_LOGIC_OPERABLE(f4, float4_py, int8_py);
     MAKE_LOGIC_OPERABLE(f4, float4_py, float4_py);
     MAKE_LOGIC_OPERABLE(f4, float4_py, float8_py);
-    MAKE_PY_LOGIC_OPERABLE(f4, py::int_, float4_py, long int);
-    MAKE_PY_LOGIC_OPERABLE(f4, py::float_, float4_py, double);
+    MAKE_PY_LOGIC_OPERABLE(f4, py::int_, float4_py, btp::int8);
+    MAKE_PY_LOGIC_OPERABLE(f4, py::float_, float4_py, btp::float8);
     
     // float8_py OVERLOADS
-    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, int1_py, double);
-    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, int2_py, double);
-    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, int4_py, double);
-    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, int8_py, double);
-    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, float4_py, double);
-    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, float8_py, double);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(f8, py::int_, float8_py, double);
-    MAKE_PY_ARITHMETIC_COMPATIBLE(f8, py::float_, float8_py, double);
+    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, int1_py, btp::float8);
+    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, int2_py, btp::float8);
+    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, int4_py, btp::float8);
+    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, int8_py, btp::float8);
+    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, float4_py, btp::float8);
+    MAKE_ARITHMETIC_COMPATIBLE(f8, float8_py, float8_py, btp::float8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(f8, py::int_, float8_py, btp::float8);
+    MAKE_PY_ARITHMETIC_COMPATIBLE(f8, py::float_, float8_py, btp::float8);
     
     MAKE_LOGIC_OPERABLE(f8, float8_py, int1_py);
     MAKE_LOGIC_OPERABLE(f8, float8_py, int2_py);
@@ -195,12 +195,19 @@ PYBIND11_MODULE(wrapper, m) {
     MAKE_LOGIC_OPERABLE(f8, float8_py, int8_py);
     MAKE_LOGIC_OPERABLE(f8, float8_py, float4_py);
     MAKE_LOGIC_OPERABLE(f8, float8_py, float8_py);
-    MAKE_PY_LOGIC_OPERABLE(f8, py::int_, float8_py, long int);
-    MAKE_PY_LOGIC_OPERABLE(f8, py::float_, float8_py, double);
+    MAKE_PY_LOGIC_OPERABLE(f8, py::int_, float8_py, btp::int8);
+    MAKE_PY_LOGIC_OPERABLE(f8, py::float_, float8_py, btp::float8);
 
-    MAKE_PY_STRING_COMPARABLE(tx, py::str, text_py, std::string);
     // MAKE_PY_STRING_COMPARABLE(tz, py::str, timetz_py, std::string);
+    // text_py overloads
+    MAKE_PY_STRING_COMPARABLE(tx, py::str, text_py, std::string);
+
+    // timestamptz_py overloads
     MAKE_PY_STRING_COMPARABLE(dtz, py::str, timestamptz_py, std::string);
+    MAKE_LOGIC_OPERABLE(dtz, timestamptz_py, timestamptz_py);
+
+    // date_py overloads
     MAKE_PY_STRING_COMPARABLE(dt, py::str, date_py, std::string);
+    MAKE_LOGIC_OPERABLE(dt, date_py, date_py);
 }
 

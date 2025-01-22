@@ -8,8 +8,8 @@ import functools
 from pydantic import\
     create_model,\
     BaseModel
-from .check import \
-    check,\
+from .predicate import \
+    LogicOperand,\
     Operand,\
     OperandDefinitionContext
 import copy
@@ -20,54 +20,114 @@ from pydantic_core import\
 from pydantic import\
     GetCoreSchemaHandler
 import copy
+from .builtin import\
+    Undefined
+from enum import\
+    Enum,\
+    auto
+from .util.inspection import\
+    extract_by_instance_type_from_field_info
 
 
 def configure_default(
-    name: str, info: FieldInfo, tp: type, definition_context: OperandDefinitionContext
+    name: str, info: FieldInfo, tp: type, definition_context: OperandDefinitionContext,
+    propagate_definition: bool = True
 ) -> None:
     if isinstance(info.default, Operand):
-        info.default.propagate_definition(tp, name, definition_context)
+        if propagate_definition:
+            info.default.propagate_definition(tp, name, definition_context)
         # cant have default_factory and default set at the same time
         default_factory = copy.deepcopy(info.default.value)
         info.default_factory = lambda value: tp(default_factory(value))
-        info.default = pydantic_core._pydantic_core.PydanticUndefined
-    elif info.default != pydantic_core._pydantic_core.PydanticUndefined:
-        info.default = tp(info.default) if info.default is not None and not isinstance(info.default, tp) else None
+        info.default = Undefined
+    elif info.default != Undefined:
+        if isinstance(info.default, tp) or info.default is None:
+            return
+        info.default = tp(info.default)
+
+
+class InheritancePolicy(Enum):
+    DISALLOW = auto()
+    MERGE_PARENT_FIELDS = auto()
+    FORCE_REDECLARATION = auto()
+
+
+def _tuple_to_dict(
+    tup: tuple[Any, ...], model_fields: dict[str, FieldInfo]
+) -> dict[str, Any]:
+    return {name: tup[ix] for name, ix in zip(model_fields.keys(), range(0, len(tup)))}
+
+
+def _check_py_fields_compatible_with_cpp_fields(
+    _cpp_field_names: tuple[str, ...], _cpp_field_types: tuple[type, ...], model_fields: dict[str, FieldInfo]
+) -> None:
+    field_names_tuple: tuple[str] = tuple(model_fields.keys())
+    if len(_cpp_field_names) != len(field_names_tuple):
+        raise TypeError('class must define same fields as those declared in cpp type')
+    errors = []
+    for ix in range(0, len(_cpp_field_names)):
+        if _cpp_field_names[ix] != field_names_tuple[ix]:
+            errors.append(f'field {_cpp_field_names[ix]} must be at position {ix} in python type declaration')
+        if not issubclass(model_fields[field_names_tuple[ix]].annotation, _cpp_field_types[ix]):
+            errors.append(f'field {_cpp_field_names[ix]} must be a subclass of cpp type {_cpp_field_types[ix]}')
+    if len(errors) > 0:
+        raise TypeError('\n'.join(errors))
+
+
+def _configure_defaults(
+    model_fields: dict[str, FieldInfo], definition_context: type[OperandDefinitionContext]
+) -> None:
+    for name, info in model_fields.items():
+        tp: type = info.annotation
+        if not info.is_required():
+            configure_default(name, info, tp, definition_context)
+        elif hasattr(tp, '__default__'):
+            info.default = getattr(tp, '__default__')()
+            configure_default(name, info, tp, definition_context)
+        for meta in info.metadata:
+            if isinstance(meta, LogicOperand):
+                meta.propagate_definition(tp, name, definition_context)
+
+
+def _configure_predicates(
+    model_fields: dict[str, FieldInfo], definition_context: type[OperandDefinitionContext]
+) -> None:
+    for name, info in model_fields.items():
+        tp: type = info.annotation
+        for pred in extract_by_instance_type_from_field_info(info, LogicOperand):
+            pred.propagate_definition(tp, name, definition_context)
 
 
 class compound(type(bw.base)):
     def __new__(
-        cls, clsname, clsbases, namespace
+        cls, clsname, clsbases, namespace, *,
+        inheritance_policy: InheritancePolicy = InheritancePolicy.DISALLOW
     ) -> type:
-        if len(clsbases) > 1:
-            raise TypeError(f'compound type {cls} doesnt allow multiple bases')
+        if len(clsbases) != 1:
+            raise TypeError(f'compound type {cls} only allows one base class')
 
         def __init__(self, *args: Any, **data: dict[str, Any]) -> None:
             if len(args) > 0 and len(data) > 0:
                 raise ValueError(f'Can instance {self.__class__.__name__} with position parameters or named parameters, not both.')
             if len(args) > 0:
-                data = self.__class__.tuple_to_dict(args)
+                data = _tuple_to_dict(args, self.__class__.model_fields)
             data = self.__class__.model.__pydantic_validator__.validate_python(data, self_instance=self)
             clsbases[0].__init__(self, *tuple([getattr(data, name) for name in self.__class__.model_fields]))
 
         def __repr__(self) -> str:
             return f'{self.__class__.__name__}({", ".join([f"{name}={repr(getattr(self, name))}" for name in self.__class__.model_fields])})'
 
-        # def __setattr__(self, name: str, value: Any) -> None:
-            # raise NotImplementedError
-
         rettype: type = super().__new__(
             cls, clsname, clsbases, namespace | {
                 '__init__': __init__,
                 '__repr__': __repr__,
-                # '__setattr__': __setattr__
             })
+        _check_py_fields_compatible_with_cpp_fields(rettype._cpp_field_names, rettype._cpp_field_types, rettype.model_fields)
+        _configure_defaults(rettype.model_fields, rettype.definition_context())
+        _configure_predicates(rettype.model_fields, rettype.definition_context())
+        rettype.model.model_rebuild(force=True)
         clsbases[0].set_py_cls(rettype)
-        rettype._configure_defaults()
         return rettype
-
-    def tuple_to_dict(self, tup: tuple[Any, ...]) -> dict[str, Any]:
-        return {name: tup[ix] for name, ix in zip(self.model_fields.keys(), range(0, len(tup)))}
 
     @property
     @functools.cache
@@ -75,29 +135,12 @@ class compound(type(bw.base)):
         members = self.__annotations__
         return create_model(
             f'{self.__name__}_Model',
-            **{memb: (members[memb], getattr(self, memb, pydantic_core._pydantic_core.PydanticUndefined), ) for memb in members}
+            **{memb: (members[memb], getattr(self, memb, Undefined), ) for memb in members}
         )
 
     @property
     def model_fields(self) -> dict[str, FieldInfo]:
         return self.model.model_fields
-
-    def _configure_defaults(self) -> None:
-        for name, info in self.model_fields.items():
-            tp: type = info.annotation
-            if not info.is_required():
-                configure_default(name, info, tp, self.definition_context())
-            elif hasattr(tp, '__default__'):
-                info.default = getattr(tp, '__default__')()
-                configure_default(name, info, tp, self.definition_context())
-            for meta in info.metadata:
-                if isinstance(meta, check):
-                    meta.predicate.propagate_definition(tp, name, self.definition_context())
-        self.model.model_rebuild(force=True)
-
-    @abstractmethod
-    def definition_context(self) -> OperandDefinitionContext:
-        pass
 
     def __attempt_to_create_instance__(self, value: Any, info: core_schema.ValidationInfo):
         if isinstance(value, self):
@@ -112,13 +155,16 @@ class compound(type(bw.base)):
         return core_schema.with_info_plain_validator_function(
             function=self.__attempt_to_create_instance__)
 
+    @abstractmethod
+    def definition_context(self) -> type[OperandDefinitionContext]:
+        pass
+
 
 class inherits:
     def __init__(
         self, *bases: Any
     ) -> None:
-        for base in bases:
-            assert isinstance(base, compound)
+        assert all([isinstance(tp, compound) for tp in bases])
         self.bases = bases
 
     def _check_consistent_base_class_fields(self, target: type):
@@ -152,13 +198,7 @@ class inherits:
                     pass
                 else:
                     # parent defines default, child doesnt, inherit parents
-                    if isinstance(info.default, Operand):
-                        # cant have default_factory and default set at the same time
-                        default_factory = copy.deepcopy(info.default.value)
-                        tf_info.default_factory = lambda value: tp(default_factory(value))
-                        tf_info.default = pydantic_core._pydantic_core.PydanticUndefined
-                    else:
-                        model_fields[name].default = info.default
+                    configure_default(name, info, tp, self.definition_context(), False)
         if len(errors) > 0:
             raise TypeError(f'Base class errors:\n{"\n".join(errors)}')
         target.model.model_rebuild(force=True)

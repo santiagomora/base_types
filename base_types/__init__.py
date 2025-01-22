@@ -1,19 +1,37 @@
-from .builtin import builtin
+from .builtin import\
+    builtin,\
+    Undefined
 from .compound import\
     compound,\
-    inherits
+    inherits,\
+    InheritancePolicy
 from .enums import enum
 import base_types.cpp.wrapper as bw
-from .check import\
-    check,\
+from .predicate import\
+    LogicOperand,\
     Operand,\
     OperandDefinitionContext,\
     this,\
     field,\
     literal
+from numbers import\
+    Number
 
 
-__all__ = ['inherits', 'this', 'field', 'literal', 'check', 'Operand', 'OperandDefinitionContext', 'builtin', 'enum', 'compound', 'int1', 'int2', 'int4', 'int8', 'float4', 'float8', 'char', 'bool', 'text', 'timestamptz', 'timetz', 'date']
+__all__ = ['inherits', 'InheritancePolicy', 'this', 'field', 'literal', 'LogicOperand', 'Undefined', 'Operand', 'OperandDefinitionContext', 'builtin', 'enum', 'compound', 'int1', 'int2', 'int4', 'int8', 'float4', 'float8', 'char', 'bool', 'text', 'timestamptz', 'timetz', 'date']
+
+
+LogicOperand.type_compatibility.register(bw.int8_py, Number)
+LogicOperand.type_compatibility.register(bw.int4_py, Number)
+LogicOperand.type_compatibility.register(bw.int2_py, Number)
+LogicOperand.type_compatibility.register(bw.float8_py, Number)
+LogicOperand.type_compatibility.register(bw.float4_py, Number)
+# LogicOperand.type_compatibility.register(bw.date_py, bw.date_py)
+LogicOperand.type_compatibility.register(bw.text_py, str)
+# LogicOperand.type_compatibility.register(bw.text_py, bw.text_py)
+# LogicOperand.type_compatibility.register(bw.timestamptz_py, bw.timestamptz_py)
+LogicOperand.type_compatibility.register(bw.bool_py, bool)
+LogicOperand.type_compatibility.register(compound, compound)
 
 
 class int1(bw.int1_py, metaclass=builtin):

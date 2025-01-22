@@ -2,9 +2,8 @@ from __future__ import\
     annotations
 from abc import\
     ABC,\
+    abstractclassmethod,\
     abstractmethod
-from dataclasses import\
-    dataclass
 from typing import\
     Any,\
     Type,\
@@ -30,15 +29,21 @@ from enum import \
     auto
 
 
-class OperandDefinitionContext(Enum):
-    BUILTIN_DOMAIN = auto()
-    COMPOSITE_DOMAIN = auto()
-    TABLE = auto()
+class OperandDefinitionContext:
+    @abstractclassmethod
+    def parse_field(cls, field_instance: field) -> str:
+        pass
+
+    @abstractclassmethod
+    def parse_this(cls, this_instance: this) -> str:
+        pass
+
+    @classmethod
+    def parse_literal(cls, literal_instance: literal) -> str:
+        return f'{literal_instance._lit if literal_instance._lit is not None else literal_instance._args[0]}'
 
 
 # TODO this whole module will eventually be cythonized
-
-
 T = TypeVar('T')
 
 
@@ -52,27 +57,50 @@ class Operand(Generic[T]):
         pass
 
     @abstractmethod
+    def __repr__(self) -> str:
+        pass
+
+    @abstractmethod
     def value(self, info: dict[str, Any]) -> T:
         pass
 
     @abstractmethod
     def propagate_definition(
         self, basecls: type, fieldname: Optional[str],
-        context: OperandDefinitionContext
+        context: type[OperandDefinitionContext]
     ) -> Self:
         pass
 
 
-class LogicOperand(Operand[bool]):
-    def merge(self, operation_cls: type, other: Operand[bool]) -> Operand[bool]:
-        if operation_cls == self.__class__:
-            self.append(other)
-            return self
-        else:
-            return operation_cls(self, other)
+class _TypeCompatibility(dict[type, type]):
+    def register(self, for_type: type, compatible_with: type) -> None:
+        if for_type in self:
+            raise Exception(f'Cant overwrite {for_type} compatibility.')
+        self[for_type] = compatible_with
 
-    def check_type(self, annotated_type: type, check_type: type,
-                   type_compatibility: dict[type, type]) -> None:
+    def get_supertype(self, for_type: type) -> Optional[type]:
+        for t in self:
+            if issubclass(for_type, t):
+                return t
+        return None
+
+
+class LogicOperand(Operand[bool]):
+    type_compatibility: _TypeCompatibility = _TypeCompatibility()
+
+    def __init__(self) -> None:
+        self.source = None
+        self.field_name = ''
+        self.parent = None
+
+    def merge(
+        self, operation_cls: type, other: LogicOperand[bool]
+    ) -> LogicOperand[bool]:
+        return operation_cls(self, other)
+
+    def check_type(
+        self, annotated_type: type, check_type: type, type_compatibility: dict[type, type]
+    ) -> None:
         if check_type == annotated_type:
             return
         errors: list[str] = []
@@ -96,6 +124,33 @@ class LogicOperand(Operand[bool]):
 
     def __or__(self, other: LogicOperand) -> LogicOperand:
         return self.merge(_or, other)
+
+    def __get_pydantic_core_schema__(
+        self, source: type, handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        self.source = source
+        self.field_name = handler.field_name
+        return core_schema.with_info_after_validator_function(
+            function=self.validate_value,
+            schema=handler(source),
+            field_name=self.field_name)
+
+    def _validate(
+        self, value: Any, info_data: Optional[ValidationInfo] = None
+    ) -> Any:
+        data = {self.field_name: value} if info_data is None else info_data
+        if self.field_name not in data:
+            info_data[self.field_name] = value
+        if not self.value(data):
+            raise ValueError(f'constraint validation failed for value "{value}"')
+        return value
+
+    def validate_value(
+        self, value: Any, info: ValidationInfo
+    ) -> Any:
+        # if self.field_name not in info.data:
+        #     return getattr(self._source, '__default__')()
+        return self._validate(value, info.data)
 
 
 class ArithmeticOperand(Operand[Any]):
@@ -171,7 +226,7 @@ class ArithmeticOperation(ArithmeticOperand, list[ArithmeticOperand]):
 
     def propagate_definition(
         self, basecls: type, fieldname: Optional[str],
-        context: OperandDefinitionContext
+        context: type[OperandDefinitionContext]
     ) -> Self:
         for operand in self:
             operand.propagate_definition(basecls, fieldname, context)
@@ -183,8 +238,10 @@ class ArithmeticOperation(ArithmeticOperand, list[ArithmeticOperand]):
 
 
 class LogicOperandSpec(LogicOperand):
-    def __init__(self, operand1: ArithmeticOperand,
-                 operand2: ArithmeticOperand, opstr: str) -> None:
+    def __init__(
+        self, operand1: ArithmeticOperand, operand2: ArithmeticOperand, opstr: str
+    ) -> None:
+        LogicOperand.__init__(self)
         self.operand1 = operand1
         self.operand2 = operand2
         self.opstr = opstr
@@ -203,7 +260,7 @@ class LogicOperandSpec(LogicOperand):
 
     def propagate_definition(
         self, basecls: type, fieldname: Optional[str],
-        context: OperandDefinitionContext
+        context: type[OperandDefinitionContext]
     ) -> Self:
         self.operand1.propagate_definition(basecls, fieldname, context)
         self.operand2.propagate_definition(basecls, fieldname, context)
@@ -211,9 +268,11 @@ class LogicOperandSpec(LogicOperand):
 
 
 class LogicOperation(LogicOperand, list[LogicOperandSpec]):
-    def __init__(self, operand1: LogicOperand, operand2: LogicOperand,
-                 opstr: str) -> None:
-        super().__init__((operand1, operand2))
+    def __init__(
+        self, operand1: LogicOperand, operand2: LogicOperand, opstr: str
+    ) -> None:
+        list.__init__(self, (operand1, operand2))
+        LogicOperand.__init__(self)
         self.opstr = opstr
 
     def __str__(self) -> str:
@@ -226,7 +285,7 @@ class LogicOperation(LogicOperand, list[LogicOperandSpec]):
 
     def propagate_definition(
         self, basecls: type, fieldname: Optional[str],
-        context: OperandDefinitionContext
+        context: type[OperandDefinitionContext]
     ) -> Self:
         for op in self:
             op.propagate_definition(basecls, fieldname, context)
@@ -237,20 +296,11 @@ class this(ArithmeticOperand):
     def __init__(self) -> None:
         # el field debe ser un atributo de la clase que registra la anotacion
         self._fieldname: Optional[str] = None
-        self._context: Optional[OperandDefinitionContext] = None
+        self._context = OperandDefinitionContext
 
     def __str__(self) -> str:
-        if self._context == OperandDefinitionContext.BUILTIN_DOMAIN:
-            return 'VALUE'
-        else:
-            if self._fieldname is None:
-                raise ValueError(f'Operand {repr(self)} definition not correctly propagated.')
-            if self._context == OperandDefinitionContext.TABLE:
-                return f'{self._fieldname}'
-            elif self._context == OperandDefinitionContext.COMPOSITE_DOMAIN:
-                return f'(VALUE).{self._fieldname}'
-            else:
-                raise ValueError(f'Invalid operand {repr(self)} definition context')
+        print(self._context)
+        return self._context.parse_this(self)
 
     def __repr__(self) -> str:
         if self._fieldname is not None:
@@ -263,7 +313,7 @@ class this(ArithmeticOperand):
 
     def propagate_definition(
         self, basecls: type, fieldname: Optional[str],
-        context: OperandDefinitionContext
+        context: type[OperandDefinitionContext]
     ) -> Self:
         self._fieldname = fieldname
         self._context = context
@@ -274,6 +324,7 @@ class field(ArithmeticOperand):
     def __init__(self, fieldname: str) -> None:
         # el field debe ser un atributo de la clase que registra la anotacion
         self._fieldname: str = fieldname
+        self._context = OperandDefinitionContext
 
     def value(self, info: dict[str, Any]) -> Any:
         return info[self._fieldname]
@@ -282,12 +333,13 @@ class field(ArithmeticOperand):
         return f'field({self._fieldname})'
 
     def __str__(self) -> str:
-        return f'(VALUE).{self._fieldname}'
+        return self._context.parse_field(self)
 
     def propagate_definition(
         self, basecls: type, fieldname: Optional[str],
-        context: OperandDefinitionContext
+        context: type[OperandDefinitionContext]
     ) -> Self:
+        self._context = context
         return self
 
 
@@ -296,9 +348,10 @@ class literal(ArithmeticOperand):
         self._args = args
         self._kwargs = kwargs
         self._lit = None
+        self._context = OperandDefinitionContext
 
     def __str__(self):
-        return f'{self._lit if self._lit is not None else self._args[0]}'
+        return self._context.parse_literal(self)
 
     def __repr__(self):
         return f'literal({repr(self._lit)})'
@@ -308,8 +361,9 @@ class literal(ArithmeticOperand):
 
     def propagate_definition(
         self, basecls: type, fieldname: Optional[str],
-        context: OperandDefinitionContext
+        context: type[OperandDefinitionContext]
     ) -> Self:
+        self._context = context
         if not isinstance(self._lit, basecls):
             self._lit = basecls(*self._args, **self._kwargs)
         return self
@@ -330,7 +384,7 @@ class length(ArithmeticOperand):
 
     def propagate_definition(
         self, basecls: type, fieldname: Optional[str],
-        context: OperandDefinitionContext
+        context: type[OperandDefinitionContext]
     ) -> Self:
         self.target.propagate_definition(basecls, fieldname, context)
         return self
@@ -359,7 +413,7 @@ class _sub(ArithmeticOperation):
                  operand2: ArithmeticOperand) -> None:
         super().__init__(operand1, operand2, '-')
 
-    def value(self, value: Any, info: dict[str, Any]) -> Any:
+    def value(self, info: dict[str, Any]) -> Any:
         return reduce(lambda x, y: x - y.value(info), self[1:], self[0].value(info))
 
     def apply_parentheses_as_lefthand_operand(self, opcls: type) -> None:
@@ -374,7 +428,7 @@ class _mul(ArithmeticOperation):
                  operand2: ArithmeticOperand) -> None:
         super().__init__(operand1, operand2, '*')
 
-    def value(self, value: Any, info: dict[str, Any]) -> Any:
+    def value(self, info: dict[str, Any]) -> Any:
         return reduce(lambda x, y: x * y.value(info), self[1:], self[0].value(info))
 
     def apply_parentheses_as_righthand_operand(self, opcls: type) -> None:
@@ -386,7 +440,7 @@ class _div(ArithmeticOperation):
                  operand2: ArithmeticOperand) -> None:
         super().__init__(operand1, operand2, '/')
 
-    def value(self, value: Any, info: dict[str, Any]) -> Any:
+    def value(self, info: dict[str, Any]) -> Any:
         return reduce(lambda x, y: x / y.value(info), self[1:], self[0].value(info))
 
     def merge_in_operation(self, operation_cls: type,
@@ -405,7 +459,7 @@ class _mod(ArithmeticOperation):
                  operand2: ArithmeticOperand) -> None:
         super().__init__(operand1, operand2, '%')
 
-    def value(self, value: Any, info: dict[str, Any]) -> Any:
+    def value(self, info: dict[str, Any]) -> Any:
         return reduce(lambda x, y: x % y.value(info), self[1:], self[0].value(info))
 
     def merge_in_operation(self, operation_cls: type,
@@ -476,6 +530,13 @@ class _and(LogicOperation):
     def __init__(self, operand1: LogicOperand, operand2: LogicOperand) -> None:
         super().__init__(operand1, operand2, 'AND')
 
+    def merge(self, operation_cls: type, other: Operand[bool]) -> Operand[bool]:
+        if operation_cls == self.__class__:
+            self.append(other)
+            return self
+        else:
+            return operation_cls(self, other)
+
     def value(self, info: dict[str, Any]) -> bool:
         return reduce(lambda x, y: x and y.value(info), self[1:], self[0].value(info))
 
@@ -484,71 +545,13 @@ class _or(LogicOperation):
     def __init__(self, operand1: LogicOperand, operand2: LogicOperand) -> None:
         super().__init__(operand1, operand2, 'OR')
 
+    def merge(self, operation_cls: type, other: Operand[bool]) -> Operand[bool]:
+        if operation_cls == self.__class__:
+            self.append(other)
+            return self
+        else:
+            return operation_cls(self, other)
+
     def value(self, info: dict[str, Any]) -> bool:
         return reduce(lambda x, y: x or y.value(info), self[1:], self[0].value(info))
 
-
-class _TypeCompatibility(dict[type, type]):
-    def register(self, for_type: type, compatible_with: type) -> None:
-        if for_type in self:
-            raise Exception(f'Cant overwrite {for_type} compatibility.')
-        self[for_type] = compatible_with
-
-    def get_supertype(self, for_type: type) -> Optional[type]:
-        for t in self:
-            if issubclass(for_type, t):
-                return t
-        return None
-
-
-T = TypeVar('T')
-
-
-class check:
-    type_compatibility: _TypeCompatibility = _TypeCompatibility()
-
-    def __init__(
-        self, name: str, predicate: LogicOperand
-    ) -> None:
-        self.predicate = predicate
-        self.name = name
-        self._source = None
-        self.field_name = ''
-
-    def __repr__(self):
-        return f'check(name={self.name}, predicate={repr(self.predicate)})'
-
-    def __str__(self):
-        return f'({str(self.predicate)})'
-
-    def _validate(
-        self, value: Any, info_data: Optional[ValidationInfo] = None
-    ) -> Any:
-        data = {self.field_name: value} if info_data is None else info_data
-        if self.field_name not in data:
-            info_data[self.field_name] = value
-        if not self.predicate.value(data):
-            raise ValueError(f'{self.name}: constraint validation failed for value "{value}"')
-        return value
-
-    def __get_pydantic_core_schema__(
-        self, source: type, handler: GetCoreSchemaHandler
-    ) -> core_schema.CoreSchema:
-        self._source = source
-        self.field_name = handler.field_name
-        return core_schema.with_info_after_validator_function(
-            function=self.validate_value,
-            schema=handler(source),
-            field_name=self.field_name)
-
-    def validate_value(
-        self, value: Any, info: ValidationInfo
-    ) -> Any:
-        # if self.field_name not in info.data:
-        #     return getattr(self._source, '__default__')()
-        return self._validate(value, info.data)
-
-
-@dataclass
-class comment:
-    value: str
