@@ -23,6 +23,9 @@ public:\
         }\
         name::cls = c;\
     }\
+    static py::object py_cls () {\
+        return name::cls;\
+    }\
     py::object to_py () const {\
         return name::cls(__VA_ARGS__);\
     }
@@ -75,11 +78,28 @@ public:\
 }
 
 
-#define CPP_ENUM(ENUM_DEF)\
-enum T_NAME(T_NAMETUPLE(ENUM_DEF)) {\
-BOOST_PP_SEQ_ENUM(T_DIRECT_MEMBERS(ENUM_DEF))\
-}
+#define ED_TO_STRING_CASE(r, data, elem)\
+    case data::elem:\
+        return BOOST_PP_STRINGIZE(elem);
 
+
+#define CPP_ENUM(ENUM_DEF)\
+enum BOOST_PP_CAT(T_NAME(T_NAMETUPLE(ENUM_DEF)), _enum) {\
+BOOST_PP_SEQ_ENUM(T_DIRECT_MEMBERS(ENUM_DEF))\
+};\
+class T_NAME(T_NAMETUPLE(ENUM_DEF)) : public btp::wrapper<BOOST_PP_CAT(T_NAME(T_NAMETUPLE(ENUM_DEF)), _enum)>\
+{\
+HAS_PY_REPRESENTATION(T_QUALNAME(T_NAMETUPLE(ENUM_DEF)), value())\
+public:\
+    using wrapper<BOOST_PP_CAT(T_NAME(T_NAMETUPLE(ENUM_DEF)), _enum)>::wrapper;\
+    T_NAME(T_NAMETUPLE(ENUM_DEF))(const T_NAME(T_NAMETUPLE(ENUM_DEF))& other) : wrapper<BOOST_PP_CAT(T_NAME(T_NAMETUPLE(ENUM_DEF)), _enum)>(other) {}\
+    std::string to_string() const {\
+        switch(value()){\
+            BOOST_PP_SEQ_FOR_EACH(ED_TO_STRING_CASE, BOOST_PP_CAT(T_QUALNAME(T_NAMETUPLE(ENUM_DEF)), _enum), T_DIRECT_MEMBERS(ENUM_DEF))\
+        }\
+        return "";\
+    }\
+}
 
 // #define ALIAS(CLASS_DEF)
 // class CLASS(CLASS_DEF) : public QUALNAME(ALIAS_BASE(CLASS_DEF)) {

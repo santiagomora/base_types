@@ -6,6 +6,8 @@
 #include "base_types/include/types.hpp"
 
 
+// DEBUG clear && g++ -P -E -I/usr/include/boost -I../../../../../base_types/cpp -I./ types.hpp
+
 namespace test_app {
 
 CPP_DATACLASS(TEST_APP_AUTHOR);

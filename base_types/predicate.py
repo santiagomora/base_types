@@ -72,22 +72,7 @@ class Operand(Generic[T]):
         pass
 
 
-class _TypeCompatibility(dict[type, type]):
-    def register(self, for_type: type, compatible_with: type) -> None:
-        if for_type in self:
-            raise Exception(f'Cant overwrite {for_type} compatibility.')
-        self[for_type] = compatible_with
-
-    def get_supertype(self, for_type: type) -> Optional[type]:
-        for t in self:
-            if issubclass(for_type, t):
-                return t
-        return None
-
-
 class LogicOperand(Operand[bool]):
-    type_compatibility: _TypeCompatibility = _TypeCompatibility()
-
     def __init__(self) -> None:
         self.source = None
         self.field_name = ''
@@ -97,27 +82,6 @@ class LogicOperand(Operand[bool]):
         self, operation_cls: type, other: LogicOperand[bool]
     ) -> LogicOperand[bool]:
         return operation_cls(self, other)
-
-    def check_type(
-        self, annotated_type: type, check_type: type, type_compatibility: dict[type, type]
-    ) -> None:
-        if check_type == annotated_type:
-            return
-        errors: list[str] = []
-        if annotated_type not in type_compatibility:
-            annotated_type = type_compatibility.get_supertype(annotated_type)
-            if annotated_type is None:
-                errors.append(f'Compatibility not configured for type {annotated_type!r}')
-        if check_type not in type_compatibility:
-            source_type = type_compatibility.get_supertype(check_type)
-            if source_type is None:
-                errors.append(f'Compatibility not configured for type {annotated_type!r}')
-        if len(errors) > 0:
-            raise TypeError('Check definition error: ' + ', '.join(errors))
-        annotated_compat: type = type_compatibility[annotated_type]
-        check_compat: type = type_compatibility[check_type]
-        if not (issubclass(annotated_compat, check_compat) or issubclass(check_compat, annotated_compat)):
-            raise TypeError(f'Check definition error: types {annotated_type} and {check_type} are not compatible')
 
     def __and__(self, other: LogicOperand) -> LogicOperand:
         return self.merge(_and, other)

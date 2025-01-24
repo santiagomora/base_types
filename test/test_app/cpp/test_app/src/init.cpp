@@ -12,4 +12,5 @@ py::object test_app::with_timestamps::cls = py::cast<py::none>(Py_None);
 py::object test_app::post::cls = py::cast<py::none>(Py_None);
 py::object test_app::comment::cls = py::cast<py::none>(Py_None);
 py::object test_app::comment_post::cls = py::cast<py::none>(Py_None);
+py::object test_app::post_status::cls = py::cast<py::none>(Py_None);
 // py::object test_app::domain::cls = py::cast<py::none>(Py_None);

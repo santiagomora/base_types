@@ -13,12 +13,22 @@
     NAME\
 )
 
+
 #define DATACLASS_DEFINITION(NAME, CLS, MEMBERS, BASES)(\
     NAME,\
     CLS,\
     MEMBERS,\
     BASES\
 )
+
+
+#define NO_BASES_DATACLASS_DEFINITION(NAME, CLS, MEMBERS)(\
+    NAME,\
+    CLS,\
+    MEMBERS,\
+    BOOST_PP_EMPTY()\
+)
+
 
 #define ENUM_MEMBER(NAME) NAME
 

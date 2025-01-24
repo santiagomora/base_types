@@ -207,7 +207,6 @@ public:
     }
 };
 
-
 // class timetz_py : public wrapper<timetz> {
 // HAS_PY_REPRESENTATION(timetz_py, value());
 // private:
