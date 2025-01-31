@@ -24,8 +24,8 @@ def test_types_get_instanced_correctly() -> None:
     assert test_post.id == 1
     assert test_post.title == 'test title'
     assert test_post.content == 'test content'
-    assert test_post.created_at == f'{created_at.split("+")[0]}UTC+00'
-    assert test_post.updated_at == f'{updated_at.split("+")[0]}UTC+00'
+    assert test_post.created_at == created_at
+    assert test_post.updated_at == updated_at
 
     def test_create_comment_post_from_instances() -> tat.comment_post:
         author = tat.author(1, 'test author')

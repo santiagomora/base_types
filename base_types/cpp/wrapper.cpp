@@ -4,7 +4,7 @@
 #include <string>
 
 #include "base_types/include/types.hpp"
-#include "base_types/include/macros/overload.hpp"
+#include "base_types/include/macros/internal/overload.hpp"
 #include "base_types/include/macros/base.hpp"
 #include "base_types/include/macros/definition.hpp"
 #include "base_types/include/macros/register.hpp"

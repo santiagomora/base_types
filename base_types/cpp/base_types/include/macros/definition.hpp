@@ -7,8 +7,14 @@
 #include <boost/preprocessor/facilities/empty.hpp> 
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
+#include <boost/algorithm/string/find.hpp>
+#include <sstream>
 #include "./base.hpp"
 
+
+#ifndef QUOTE_FUNCTION
+    #define QUOTE_FUNCTION(FIELD_STR) FIELD_STR
+#endif
 
 
 # define HAS_PY_REPRESENTATION(name, ...)\
@@ -39,19 +45,44 @@ public:\
     BOOST_PP_COMMA_IF(i) CM_NAME(elem)
 
 
+#define CL_ACCESS_MEMBER(r, data, i, elem)\
+    BOOST_PP_COMMA_IF(i) data.CM_NAME(elem)
+
+
+#define CL_MEMBER_TYPE(r, data, i, elem)\
+    BOOST_PP_COMMA_IF(i) CM_QUALIFIED_TYPE(elem)
+
+
 #define CL_MEMBER_DECLARATION(r, data, elem)\
-    T_QUALNAME(CM_TYPE(elem)) CM_NAME(elem) data
-
-
-#define CM_INITIALIZE(r, data, elem)\
-    CM_NAME(elem)(CM_NAME(elem))
+    CM_QUALIFIED_TYPE(elem) CM_NAME(elem) data
 
 
 #define CL_INITIALIZE_BASE(r, data, elem)\
     T_NAME(T_NAMETUPLE(elem))(BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(elem))) ,
 
 
-#define CPP_DATACLASS(CLASS_DEF)\
+#define CL_INITIALIZE_EMPTY_BASE(r, data, i, elem)\
+    BOOST_PP_COMMA_IF(i) T_NAME(T_NAMETUPLE(elem))()
+
+
+#define CL_INITIALIZE_BASE_COPY(r, data, elem)\
+    T_NAME(T_NAMETUPLE(elem))(data) ,
+
+
+#define CM_INITIALIZE(r, data, elem)\
+    CM_NAME(elem)(BOOST_PP_IF(BOOST_PP_IS_EMPTY(data), CM_NAME(elem), data.CM_NAME(elem)))
+
+
+#define CM_COPY(r, data, elem)\
+    CM_NAME(elem) = data.CM_NAME(elem);
+
+
+#define CM_STREAM_TO_STRING(r, data, i, elem)\
+    BOOST_PP_IF(i, << ", " <<, BOOST_PP_EMPTY())\
+    BOOST_PP_IF(CM_IS_OPTIONAL(elem), ((CM_NAME(elem).has_value()) ? CM_NAME(elem).value().to_string() : "NULL"), CM_NAME(elem).to_string())
+
+
+#define CPP_DATACLASS_DECLARATION(CLASS_DEF)\
 class T_NAME(T_NAMETUPLE(CLASS_DEF))\
     BOOST_PP_TUPLE_ENUM(BOOST_PP_IF(\
         BOOST_PP_IS_EMPTY(T_BASES(CLASS_DEF)),\
@@ -63,6 +94,15 @@ HAS_PY_REPRESENTATION(T_QUALNAME(T_NAMETUPLE(CLASS_DEF)),  BOOST_PP_SEQ_FOR_EACH
 \
 public:\
     BOOST_PP_SEQ_FOR_EACH(CL_MEMBER_DECLARATION, ;, T_DIRECT_MEMBERS(CLASS_DEF))\
+\
+    T_NAME(T_NAMETUPLE(CLASS_DEF))()\
+    BOOST_PP_TUPLE_ENUM(BOOST_PP_IF(\
+        BOOST_PP_IS_EMPTY(T_BASES(CLASS_DEF)),\
+        (BOOST_PP_EMPTY()),\
+        (: BOOST_PP_SEQ_FOR_EACH_I(CL_INITIALIZE_EMPTY_BASE, BOOST_PP_EMPTY(), T_BASES(CLASS_DEF)))\
+    ))\
+    {}\
+\
     T_NAME(T_NAMETUPLE(CLASS_DEF)) (\
         BOOST_PP_SEQ_ENUM(\
             BOOST_PP_SEQ_TRANSFORM(CL_MEMBER_DECLARATION, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)))\
@@ -72,9 +112,29 @@ public:\
         (BOOST_PP_EMPTY()),\
         (BOOST_PP_SEQ_FOR_EACH(CL_INITIALIZE_BASE, BOOST_PP_EMPTY(), T_BASES(CLASS_DEF)))\
     ))\
-      BOOST_PP_SEQ_ENUM(\
-          BOOST_PP_SEQ_TRANSFORM(CM_INITIALIZE, BOOST_PP_EMPTY(), T_DIRECT_MEMBERS(CLASS_DEF)))\
+\
+    BOOST_PP_SEQ_ENUM(\
+        BOOST_PP_SEQ_TRANSFORM(CM_INITIALIZE, BOOST_PP_EMPTY(), T_DIRECT_MEMBERS(CLASS_DEF)))\
     {}\
+    T_NAME(T_NAMETUPLE(CLASS_DEF)) (const T_NAME(T_NAMETUPLE(CLASS_DEF))& other)\
+    : \
+    BOOST_PP_TUPLE_ENUM(BOOST_PP_IF(\
+        BOOST_PP_IS_EMPTY(T_BASES(CLASS_DEF)),\
+        (BOOST_PP_EMPTY()),\
+        (BOOST_PP_SEQ_FOR_EACH(CL_INITIALIZE_BASE_COPY, other, T_BASES(CLASS_DEF)))\
+    ))\
+    BOOST_PP_SEQ_ENUM(\
+        BOOST_PP_SEQ_TRANSFORM(CM_INITIALIZE, other, T_DIRECT_MEMBERS(CLASS_DEF)))\
+    {}\
+    T_NAME(T_NAMETUPLE(CLASS_DEF))& operator=(const T_NAME(T_NAMETUPLE(CLASS_DEF))& other) {\
+        BOOST_PP_SEQ_FOR_EACH(CM_COPY, other, C_ALL_MEMBERS(CLASS_DEF))\
+        return *this;\
+    }\
+    std::string to_string () const {\
+        std::ostringstream oss;\
+        oss << "(" << BOOST_PP_SEQ_FOR_EACH_I(CM_STREAM_TO_STRING, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)) << ")";\
+        return oss.str();\
+    }\
 }
 
 
@@ -83,21 +143,38 @@ public:\
         return BOOST_PP_STRINGIZE(elem);
 
 
-#define CPP_ENUM(ENUM_DEF)\
-enum BOOST_PP_CAT(T_NAME(T_NAMETUPLE(ENUM_DEF)), _enum) {\
+#define ED_FROM_STRING_CASE(r, data, i, elem)\
+    BOOST_PP_IF(\
+        i,\
+        else if (BOOST_PP_STRINGIZE(elem) == BOOST_PP_TUPLE_ELEM(1, data))\
+            return BOOST_PP_TUPLE_ELEM(0, data)::elem;,\
+        if (BOOST_PP_STRINGIZE(elem) == BOOST_PP_TUPLE_ELEM(1, data))\
+            return BOOST_PP_TUPLE_ELEM(0, data)::elem;\
+    )
+
+
+#define CPP_ENUM_DECLARATION(ENUM_DEF)\
+enum ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF) {\
 BOOST_PP_SEQ_ENUM(T_DIRECT_MEMBERS(ENUM_DEF))\
 };\
-class T_NAME(T_NAMETUPLE(ENUM_DEF)) : public btp::wrapper<BOOST_PP_CAT(T_NAME(T_NAMETUPLE(ENUM_DEF)), _enum)>\
+class T_NAME(T_NAMETUPLE(ENUM_DEF)) : public btp::wrapper<ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)>\
 {\
 HAS_PY_REPRESENTATION(T_QUALNAME(T_NAMETUPLE(ENUM_DEF)), value())\
 public:\
-    using wrapper<BOOST_PP_CAT(T_NAME(T_NAMETUPLE(ENUM_DEF)), _enum)>::wrapper;\
-    T_NAME(T_NAMETUPLE(ENUM_DEF))(const T_NAME(T_NAMETUPLE(ENUM_DEF))& other) : wrapper<BOOST_PP_CAT(T_NAME(T_NAMETUPLE(ENUM_DEF)), _enum)>(other) {}\
-    std::string to_string() const {\
-        switch(value()){\
-            BOOST_PP_SEQ_FOR_EACH(ED_TO_STRING_CASE, BOOST_PP_CAT(T_QUALNAME(T_NAMETUPLE(ENUM_DEF)), _enum), T_DIRECT_MEMBERS(ENUM_DEF))\
+    using btp::wrapper<ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)>::wrapper;\
+    T_NAME(T_NAMETUPLE(ENUM_DEF))(const T_NAME(T_NAMETUPLE(ENUM_DEF))& other) : wrapper<ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)>(other) {}\
+    static std::string static_to_string(const ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF) value) {\
+        switch(value){\
+            BOOST_PP_SEQ_FOR_EACH(ED_TO_STRING_CASE, ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF), T_DIRECT_MEMBERS(ENUM_DEF))\
         }\
-        return "";\
+        throw std::invalid_argument(std::string("invalid argument for ") + BOOST_PP_STRINGIZE(ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)) + " enum conversion");\
+    }\
+    std::string to_string() const {\
+        return T_QUALNAME(T_NAMETUPLE(ENUM_DEF))::static_to_string(value());\
+    }\
+    T_NAME(T_NAMETUPLE(ENUM_DEF))& operator=(const T_NAME(T_NAMETUPLE(ENUM_DEF))& other) {\
+        _value = other.wrapped_ptr();\
+        return *this;\
     }\
 }
 
@@ -189,12 +266,12 @@ public:\
 )
 
 
-#define BTP_TIMETZ TYPE_DEFINITION(\
-    BTP_TIMETZ,\
-    (btp, timetz_py),\
-    py::str,\
-    btp::text\
-)
+// #define BTP_TIMETZ TYPE_DEFINITION(
+//     BTP_TIMETZ,
+//     (btp, timetz_py),
+//     py::str,
+//     btp::text
+// )
 
 
 #define BTP_DATE TYPE_DEFINITION(\

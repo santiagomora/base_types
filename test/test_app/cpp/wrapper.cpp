@@ -1,6 +1,5 @@
 
 
-#include <pybind11/pybind11.h>
 #include "test_app/include/types.hpp"
 #include "test_app/include/definitions.hpp"
 #include "base_types/include/macros/register.hpp"
@@ -12,7 +11,7 @@ namespace py = pybind11;
 // DEBUG clear && g++ -P -E -I/usr/include/boost -I../../../base_types/cpp -I./ wrapper.cpp
 
 
-PYBIND11_MODULE(wrapper, m) {
+PYBIND11_MODULE (wrapper, m) {
     PY_DATACLASS_REGISTER(TEST_APP_AUTHOR, m);
     PY_DATACLASS_REGISTER(TEST_APP_AUTHORED, m);
     PY_DATACLASS_REGISTER(TEST_APP_WITH_TIMESTAMPS, m);

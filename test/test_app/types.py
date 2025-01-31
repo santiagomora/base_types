@@ -42,7 +42,3 @@ class comment_post(ta.comment_post, metaclass=bt.compound):
 @bt.builtin.set_check_predicate(bt.this() > bt.literal(0))
 class domain(bt.int8, metaclass=bt.builtin):
     pass
-
-# 
-# class culo(ta.test_function_receives_author_correctly):
-#     pass
