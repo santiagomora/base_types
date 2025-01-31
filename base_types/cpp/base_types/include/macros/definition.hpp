@@ -197,73 +197,83 @@ public:\
 
 #define BTP_BOOLEAN TYPE_DEFINITION(\
     BTP_BOOLEAN,\
-    (btp, bool_py),\
+    (btp, boolean),\
     py::bool_,\
-    btp::boolean\
+    btp::boolean_\
 )
+#define BTP_BOOLEAN_CONSTRUCTORS (BTP_BOOLEAN)
 
 
 #define BTP_INT1 TYPE_DEFINITION(\
     BTP_INT1,\
-    (btp, int1_py),\
+    (btp, int1),\
     py::int_,\
-    btp::int8\
+    btp::int8_\
 )
+#define BTP_INT1_CONSTRUCTORS (BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_INT8)(BTP_FLOAT4)(BTP_FLOAT8)
 
 
 #define BTP_INT2 TYPE_DEFINITION(\
     BTP_INT2,\
-    (btp, int2_py),\
+    (btp, int2),\
     py::int_,\
-    btp::int8\
+    btp::int8_\
 )
+#define BTP_INT2_CONSTRUCTORS (BTP_INT2)(BTP_INT1)(BTP_INT4)(BTP_INT8)(BTP_FLOAT4)(BTP_FLOAT8)
 
 
 #define BTP_INT4 TYPE_DEFINITION(\
     BTP_INT4,\
-    (btp, int4_py),\
+    (btp, int4),\
     py::int_,\
-    btp::int8\
+    btp::int8_\
 )
+#define BTP_INT4_CONSTRUCTORS (BTP_INT4)(BTP_INT1)(BTP_INT2)(BTP_INT8)(BTP_FLOAT4)(BTP_FLOAT8)
+
 
 #define BTP_INT8 TYPE_DEFINITION(\
     BTP_INT8,\
-    (btp, int8_py),\
+    (btp, int8),\
     py::int_,\
-    btp::int8\
+    btp::int8_\
 )
+#define BTP_INT8_CONSTRUCTORS (BTP_INT8)(BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_FLOAT4)(BTP_FLOAT8)
 
 
 #define BTP_FLOAT4 TYPE_DEFINITION(\
     BTP_FLOAT4,\
-    (btp, float4_py),\
+    (btp, float4),\
     py::float_,\
-    btp::float8\
+    btp::float8_\
 )
+#define BTP_FLOAT4_CONSTRUCTORS (BTP_FLOAT4)(BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_INT8)(BTP_FLOAT8)
 
 
 #define BTP_FLOAT8 TYPE_DEFINITION(\
     BTP_FLOAT8,\
-    (btp, float8_py),\
+    (btp, float8),\
     py::float_,\
-    btp::float8\
+    btp::float8_\
 )
+#define BTP_FLOAT8_CONSTRUCTORS (BTP_FLOAT8)(BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_INT8)(BTP_FLOAT4)
 
 
 #define BTP_TEXT TYPE_DEFINITION(\
     BTP_TEXT,\
-    (btp, text_py),\
+    (btp, text),\
     py::str,\
-    btp::text\
+    btp::text_\
 )
+#define BTP_TEXT_CONSTRUCTORS (BTP_TEXT)
 
 
 #define BTP_TIMESTAMPTZ TYPE_DEFINITION(\
     BTP_TIMESTAMPTZ,\
-    (btp, timestamptz_py),\
+    (btp, timestamptz),\
     py::str,\
-    btp::text\
+    btp::text_\
 )
+#define BTP_TIMESTAMPTZ_CONSTRUCTORS (BTP_TIMESTAMPTZ)
 
 
 // #define BTP_TIMETZ TYPE_DEFINITION(
@@ -272,26 +282,15 @@ public:\
 //     py::str,
 //     btp::text
 // )
+// #define BTP_TIMETZ_CONSTRUCTORS (BTP_TIMETZ)
 
 
 #define BTP_DATE TYPE_DEFINITION(\
     BTP_DATE,\
-    (btp, date_py),\
+    (btp, date),\
     py::str,\
-    btp::text\
+    btp::text_\
 )
-
-
-#define BTP_BOOLEAN_CONSTRUCTORS (BTP_BOOLEAN)
-#define BTP_INT1_CONSTRUCTORS (BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_INT8)(BTP_FLOAT4)(BTP_FLOAT8)
-#define BTP_INT2_CONSTRUCTORS (BTP_INT2)(BTP_INT1)(BTP_INT4)(BTP_INT8)(BTP_FLOAT4)(BTP_FLOAT8)
-#define BTP_INT4_CONSTRUCTORS (BTP_INT4)(BTP_INT1)(BTP_INT2)(BTP_INT8)(BTP_FLOAT4)(BTP_FLOAT8)
-#define BTP_INT8_CONSTRUCTORS (BTP_INT8)(BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_FLOAT4)(BTP_FLOAT8)
-#define BTP_FLOAT8_CONSTRUCTORS (BTP_FLOAT8)(BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_INT8)(BTP_FLOAT4)
-#define BTP_FLOAT4_CONSTRUCTORS (BTP_FLOAT4)(BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_INT8)(BTP_FLOAT8)
-#define BTP_TEXT_CONSTRUCTORS (BTP_TEXT)
-#define BTP_TIMESTAMPTZ_CONSTRUCTORS (BTP_TIMESTAMPTZ)
-#define BTP_TIMETZ_CONSTRUCTORS (BTP_TIMETZ)
 #define BTP_DATE_CONSTRUCTORS (BTP_DATE)
 
 

@@ -52,13 +52,6 @@
 )
 
 
-// #define ALIAS_DEFINITION(NAME, CLS, BASE)(
-//     NAME,
-//     CLS,
-//     BASE
-// )
-
-
 #define TYPE_DEFINITION(NAME, CLS, PY_BASES, BASES)(\
     NAME,\
     CLS,\
@@ -71,10 +64,6 @@
     (TP_NAMESPACE, TP_NAME),\
     NAME\
 )
-
-
-// #define ALIAS_BASE(CLASS_DEF)
-//     BOOST_PP_TUPLE_ELEM(1, CLASS_DEF)
 
 
 #define T_MACRO_NAME(TYPE_DEF)\

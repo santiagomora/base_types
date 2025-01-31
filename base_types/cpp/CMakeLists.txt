@@ -11,7 +11,6 @@ find_package(pybind11 REQUIRED)
 
 pybind11_add_module(${PROJECT_NAME}
     wrapper.cpp
-    base_types/src/init.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE .)
