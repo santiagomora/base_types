@@ -8,8 +8,8 @@
 #include <boost/preprocessor/stringize.hpp>
 
 
-#define DATACLASS_MEMBER(TP_NAMESPACE, TP_NAME, NAME)(\
-    (TP_NAMESPACE, TP_NAME),\
+#define DATACLASS_MEMBER(BASE_TP, NAME)(\
+    T_NAMETUPLE(BASE_TP),\
     NAME,\
     0\
 )

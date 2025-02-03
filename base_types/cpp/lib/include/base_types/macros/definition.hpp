@@ -12,31 +12,6 @@
 #include "./base.hpp"
 
 
-#ifndef QUOTE_FUNCTION
-    #define QUOTE_FUNCTION(FIELD_STR) FIELD_STR
-#endif
-
-
-# define HAS_PY_REPRESENTATION(name, ...)\
-private:\
-    static py::object cls;\
-public:\
-    static void set_py_cls (py::object c) {\
-        if (name::cls != Py_None){\
-            std::string tp_name = py::getattr(c, "__name__").cast<std::string>();\
-            std::cout << "WARNING: py_cls already set for class \"" << tp_name << "\". Skipping..." << std::endl;\
-            return;\
-        }\
-        name::cls = c;\
-    }\
-    static py::object py_cls () {\
-        return name::cls;\
-    }\
-    py::object to_py () const {\
-        return name::cls(__VA_ARGS__);\
-    }
-
-
 #define CL_INHERIT_BASES(r, data, elem)\
     (public T_QUALNAME(T_NAMETUPLE(elem)))
 
@@ -90,9 +65,8 @@ class T_NAME(T_NAMETUPLE(CLASS_DEF))\
         (: BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_FOR_EACH(CL_INHERIT_BASES, BOOST_PP_EMPTY(), T_BASES(CLASS_DEF)))))\
     )\
 {\
-HAS_PY_REPRESENTATION(T_QUALNAME(T_NAMETUPLE(CLASS_DEF)),  BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)))\
-\
 public:\
+    static btp::py_subclass_registry<BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))> subclass_registry;\
     BOOST_PP_SEQ_FOR_EACH(CL_MEMBER_DECLARATION, ;, T_DIRECT_MEMBERS(CLASS_DEF))\
 \
     T_NAME(T_NAMETUPLE(CLASS_DEF))()\
@@ -135,6 +109,9 @@ public:\
         oss << "(" << BOOST_PP_SEQ_FOR_EACH_I(CM_STREAM_TO_STRING, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)) << ")";\
         return oss.str();\
     }\
+    py::object to_py(std::string subclass_name) const {\
+        return T_QUALNAME(T_NAMETUPLE(CLASS_DEF))::subclass_registry.to_py(subclass_name, BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)));\
+    }\
 }
 
 
@@ -159,8 +136,8 @@ BOOST_PP_SEQ_ENUM(T_DIRECT_MEMBERS(ENUM_DEF))\
 };\
 class T_NAME(T_NAMETUPLE(ENUM_DEF)) : public btp::wrapper<ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)>\
 {\
-HAS_PY_REPRESENTATION(T_QUALNAME(T_NAMETUPLE(ENUM_DEF)), value())\
 public:\
+    static btp::py_subclass_registry<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))> subclass_registry;\
     using btp::wrapper<ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)>::wrapper;\
     T_NAME(T_NAMETUPLE(ENUM_DEF))(const T_NAME(T_NAMETUPLE(ENUM_DEF))& other) : wrapper<ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)>(other) {}\
     static std::string static_to_string(const ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF) value) {\
@@ -169,12 +146,15 @@ public:\
         }\
         throw std::invalid_argument(std::string("invalid argument for ") + BOOST_PP_STRINGIZE(ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)) + " enum conversion");\
     }\
-    std::string to_string() const {\
-        return T_QUALNAME(T_NAMETUPLE(ENUM_DEF))::static_to_string(value());\
-    }\
     T_NAME(T_NAMETUPLE(ENUM_DEF))& operator=(const T_NAME(T_NAMETUPLE(ENUM_DEF))& other) {\
         _value = other.wrapped_ptr();\
         return *this;\
+    }\
+    std::string to_string() const {\
+        return T_QUALNAME(T_NAMETUPLE(ENUM_DEF))::static_to_string(value());\
+    }\
+    py::object to_py(std::string subclass_name) const {\
+        return T_QUALNAME(T_NAMETUPLE(ENUM_DEF))::subclass_registry.to_py(subclass_name, *this);\
     }\
 }
 
@@ -276,15 +256,6 @@ public:\
 #define BTP_TIMESTAMPTZ_CONSTRUCTORS (BTP_TIMESTAMPTZ)
 
 
-// #define BTP_TIMETZ TYPE_DEFINITION(
-//     BTP_TIMETZ,
-//     (btp, timetz_py),
-//     py::str,
-//     btp::text
-// )
-// #define BTP_TIMETZ_CONSTRUCTORS (BTP_TIMETZ)
-
-
 #define BTP_DATE TYPE_DEFINITION(\
     BTP_DATE,\
     (btp, date),\
@@ -292,6 +263,15 @@ public:\
     btp::text_\
 )
 #define BTP_DATE_CONSTRUCTORS (BTP_DATE)
+
+
+// #define BTP_TIMETZ TYPE_DEFINITION(
+//     BTP_TIMETZ,
+//     (btp, timetz_py),
+//     py::str,
+//     btp::text
+// )
+// #define BTP_TIMETZ_CONSTRUCTORS (BTP_TIMETZ)
 
 
 #endif

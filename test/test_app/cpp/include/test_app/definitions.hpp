@@ -1,15 +1,15 @@
-#ifndef TEST_APP_MACROS_DEFINITIONS
-#define TEST_APP_MACROS_DEFINITIONS
+#ifndef TEST_APP_DEFINITIONS
+#define TEST_APP_DEFINITIONS
 
 
-#include "base_types/include/macros/definition.hpp"
+#include "base_types/macros/definition.hpp"
 
 
 #define TEST_APP_AUTHOR NO_BASES_DATACLASS_DEFINITION(\
     TEST_APP_AUTHOR,\
     (test_app, author),\
-    (DATACLASS_MEMBER(btp, int8_py, id))\
-    (DATACLASS_MEMBER(btp, text_py, name))\
+    (DATACLASS_MEMBER(BTP_INT8, id))\
+    (DATACLASS_MEMBER(BTP_TEXT, name))\
 )
 #define TEST_APP_AUTHOR_MEMBERS T_DIRECT_MEMBERS(TEST_APP_AUTHOR)
 #define TEST_APP_AUTHOR_CONSTRUCTORS (TEST_APP_AUTHOR)
@@ -18,8 +18,8 @@
 #define TEST_APP_AUTHORED NO_BASES_DATACLASS_DEFINITION(\
     TEST_APP_AUTHORED,\
     (test_app, authored),\
-    (DATACLASS_MEMBER(btp, int8_py, author_id))\
-    (DATACLASS_MEMBER(btp, text_py, content))\
+    (DATACLASS_MEMBER(BTP_INT8, author_id))\
+    (DATACLASS_MEMBER(BTP_TEXT, content))\
 )
 #define TEST_APP_AUTHORED_MEMBERS T_DIRECT_MEMBERS(TEST_APP_AUTHORED)
 #define TEST_APP_AUTHORED_CONSTRUCTORS (TEST_APP_AUTHORED)
@@ -28,8 +28,8 @@
 #define TEST_APP_WITH_TIMESTAMPS NO_BASES_DATACLASS_DEFINITION(\
     TEST_APP_WITH_TIMESTAMPS,\
     (test_app, with_timestamps),\
-    (DATACLASS_MEMBER(btp, timestamptz_py, created_at))\
-    (DATACLASS_MEMBER(btp, timestamptz_py, updated_at))\
+    (DATACLASS_MEMBER(BTP_TIMESTAMPTZ, created_at))\
+    (DATACLASS_MEMBER(BTP_TIMESTAMPTZ, updated_at))\
 )
 #define TEST_APP_WITH_TIMESTAMPS_MEMBERS T_DIRECT_MEMBERS(TEST_APP_WITH_TIMESTAMPS)
 #define TEST_APP_WITH_TIMESTAMPS_CONSTRUCTORS (TEST_APP_WITH_TIMESTAMPS)
@@ -48,9 +48,9 @@
 #define TEST_APP_POST DATACLASS_DEFINITION(\
     TEST_APP_POST,\
     (test_app, post),\
-    (DATACLASS_MEMBER(btp, int8_py, id))\
-    (DATACLASS_MEMBER(btp, text_py, title))\
-    (DATACLASS_MEMBER(test_app, post_status, status)),\
+    (DATACLASS_MEMBER(BTP_INT8, id))\
+    (DATACLASS_MEMBER(BTP_TEXT, title))\
+    (DATACLASS_MEMBER(TEST_APP_POST_STATUS, status)),\
     (TEST_APP_AUTHORED)(TEST_APP_WITH_TIMESTAMPS)\
 )
 #define TEST_APP_POST_MEMBERS T_DIRECT_MEMBERS(TEST_APP_POST)\
@@ -62,8 +62,8 @@
 #define TEST_APP_COMMENT DATACLASS_DEFINITION(\
     TEST_APP_COMMENT,\
     (test_app, comment),\
-    (DATACLASS_MEMBER(btp, int8_py, id))\
-    (DATACLASS_MEMBER(btp, int8_py, post_id)),\
+    (DATACLASS_MEMBER(BTP_INT8, id))\
+    (DATACLASS_MEMBER(BTP_INT8, post_id)),\
     (TEST_APP_AUTHORED)(TEST_APP_WITH_TIMESTAMPS)\
 )
 #define TEST_APP_COMMENT_MEMBERS T_DIRECT_MEMBERS(TEST_APP_COMMENT)\
@@ -75,10 +75,10 @@
 #define TEST_APP_COMMENT_POST NO_BASES_DATACLASS_DEFINITION(\
     TEST_APP_COMMENT_POST,\
     (test_app, comment_post),\
-    (DATACLASS_MEMBER(test_app, comment, comment))\
-    (DATACLASS_MEMBER(test_app, post, post))\
-    (DATACLASS_MEMBER(btp, text_py, description))\
-    (DATACLASS_MEMBER(test_app, author, author))\
+    (DATACLASS_MEMBER(TEST_APP_COMMENT, comment))\
+    (DATACLASS_MEMBER(TEST_APP_POST, post))\
+    (DATACLASS_MEMBER(BTP_TEXT, description))\
+    (DATACLASS_MEMBER(TEST_APP_AUTHOR, author))\
 )
 #define TEST_APP_COMMENT_POST_MEMBERS T_DIRECT_MEMBERS(TEST_APP_COMMENT_POST)
 #define TEST_APP_COMMENT_POST_CONSTRUCTORS (TEST_APP_COMMENT_POST)

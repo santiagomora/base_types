@@ -2,10 +2,13 @@ import base_types as bt
 import test_app.cpp.wrapper as ta
 
 
+__all__ = ['author', 'with_timestamps', 'authored', 'post_status', 'post', 'comment', 'comment_post', 'domain']
+
+
 @bt.compound.set_default(
-    value=bt.literal(10), field_name='id')
+    value=bt.literal(10), field='id')
 @bt.compound.set_default(
-    value=bt.literal('test author'), field_name='name')
+    value=bt.literal('test author'), field='name')
 class author(ta.author, metaclass=bt.compound):
     pass
 
@@ -14,8 +17,9 @@ class with_timestamps(ta.with_timestamps, metaclass=bt.compound):
     pass
 
 
-@bt.compound.set_check_predicate(
-    predicate=bt.this() > bt.literal(0), field_name='author_id')
+@bt.compound.set_constraint(
+    constraint=bt.this() > bt.literal(0), field='author_id')
+@bt.compound.set_default(field='author_id', value=20)
 class authored(ta.authored, metaclass=bt.compound):
     pass
 
@@ -25,7 +29,7 @@ class post_status(ta.post_status, metaclass=bt.enum):
     pass
 
 
-@bt.compound.set_check_predicate(field_name='author_id', predicate=bt.this() < bt.literal(10))
+@bt.compound.set_constraint(field='author_id', constraint=bt.this() < bt.literal(10))
 class post(ta.post, metaclass=bt.compound):
     pass
 
@@ -39,6 +43,6 @@ class comment_post(ta.comment_post, metaclass=bt.compound):
 
 
 @bt.builtin.set_default(bt.literal(1))
-@bt.builtin.set_check_predicate(bt.this() > bt.literal(0))
+@bt.builtin.set_constraint(bt.this() > bt.literal(0))
 class domain(bt.int8, metaclass=bt.builtin):
     pass

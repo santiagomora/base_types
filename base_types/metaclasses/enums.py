@@ -1,7 +1,7 @@
 from typing import\
     Any,\
     Optional
-import base_types.cpp.wrapper as bw
+import base_types.cpp.module.wrapper as bw
 from pydantic_core import\
     core_schema
 from pydantic import\
@@ -9,7 +9,7 @@ from pydantic import\
 from .builtin import\
     DefaultAlias,\
     Undefined
-from .predicate import\
+from ..constraint import\
     literal,\
     OperandDefinitionContext
 import functools
@@ -49,12 +49,15 @@ class enum(type(bw.base)):
         def __init__(
             self, value: literal
         ) -> None:
-            self._default = value
+            if not isinstance(value, literal):
+                self._default = literal(value)
 
-        def __call__(self, target: type):
+        def __call__(
+            self, target: type
+        ):
             assert isinstance(target, enum)
-            assert target.pydantic_adapt.default is Undefined
-            target.pydantic_adapt.default = self._default
+            assert target._pydantic_adapt.default is Undefined
+            target._pydantic_adapt.default = self._default
             return target
 
     def __new__(
@@ -62,8 +65,12 @@ class enum(type(bw.base)):
     ):
         if len(clsbases) > 1:
             raise TypeError(f'enum {cls} doesnt allow multiple bases')
+
+        if len(clsdict) > 2:
+            raise TypeError(f'Class {cls} doesnt allow member declarations')
+
         rettype: type = super().__new__(cls, clsname, clsbases, clsdict)
-        clsbases[0].set_py_cls(rettype)
+        rettype.set_py_cls(clsname, rettype)
         return rettype
 
     def __get_pydantic_core_schema__(
@@ -71,12 +78,12 @@ class enum(type(bw.base)):
     ) -> core_schema.CoreSchema:
         return core_schema.chain_schema([
             core_schema.enum_schema(self, list(self.enum.__members__.values())),
-            core_schema.with_info_plain_validator_function(function=self.pydantic_adapt.attempt_to_create_instance)
+            core_schema.with_info_plain_validator_function(function=self._pydantic_adapt.attempt_to_create_instance)
         ])
 
     @property
     @functools.cache
-    def pydantic_adapt(self) -> _EnumPydanticAdapt:
+    def _pydantic_adapt(self) -> _EnumPydanticAdapt:
         return _EnumPydanticAdapt(self)
 
     def definition_context(self) -> type[OperandDefinitionContext]:

@@ -1,19 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
-
-project(wrapper)
+project(base_types)
 set(CMAKE_CXX_STANDARD 20)
 set(PYBIND11_PYTHON_VERSION 3.12)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -fPIC -O2 -march=native -flto=auto")
-
-set(pybind11_DIR ../../../pg_definition/venv/lib/python3.12/site-packages/pybind11/share/cmake/pybind11)
-
+set(pybind11_DIR ../../../../pg_definition/venv/lib/python3.12/site-packages/pybind11/share/cmake/pybind11)
 find_package(pybind11 REQUIRED)
-
-pybind11_add_module(${PROJECT_NAME}
-    wrapper.cpp
-)
-
+add_library(${PROJECT_NAME} SHARED 
+    ./src/init.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE pybind11::module)
 target_include_directories(${PROJECT_NAME} PRIVATE .)
 target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PYBIND11_INCLUDE_DIRS})
-# target_link_libraries(${PROJECT_NAME} PRIVATE Eigen3::Eigen)

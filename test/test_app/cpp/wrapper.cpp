@@ -1,8 +1,7 @@
-
-
-#include "test_app/include/types.hpp"
-#include "test_app/include/definitions.hpp"
-#include "base_types/include/macros/register.hpp"
+#include <pybind11/embed.h>
+#include "test_app/types.hpp"
+#include "test_app/definitions.hpp"
+#include "base_types/macros/register.hpp"
 
 
 namespace py = pybind11;
@@ -12,13 +11,15 @@ namespace py = pybind11;
 
 
 PYBIND11_MODULE (wrapper, m) {
-    PY_DATACLASS_REGISTER(TEST_APP_AUTHOR, m);
-    PY_DATACLASS_REGISTER(TEST_APP_AUTHORED, m);
-    PY_DATACLASS_REGISTER(TEST_APP_WITH_TIMESTAMPS, m);
-    PY_ENUM_REGISTER(TEST_APP_POST_STATUS, m);
-    PY_DATACLASS_REGISTER(TEST_APP_POST, m);
-    PY_DATACLASS_REGISTER(TEST_APP_COMMENT, m);
-    PY_DATACLASS_REGISTER(TEST_APP_COMMENT_POST, m);
+
+    PY_CLASSDEF_REGISTER(TEST_APP_AUTHOR, m);
+    PY_CLASSDEF_REGISTER(TEST_APP_AUTHORED, m);
+    PY_CLASSDEF_REGISTER(TEST_APP_WITH_TIMESTAMPS, m);
+    PY_ENUMDEF_REGISTER(TEST_APP_POST_STATUS, m);
+    PY_CLASSDEF_REGISTER(TEST_APP_POST, m);
+    PY_CLASSDEF_REGISTER(TEST_APP_COMMENT, m);
+    PY_CLASSDEF_REGISTER(TEST_APP_COMMENT_POST, m);
+
     m.def("test_function_receives_author_correctly", &test_app::test_function_receives_author_correctly);
     m.def("test_function_receives_comment_post_correctly", &test_app::test_function_receives_comment_post_correctly);
     m.def("test_function_receives_wt_subclass_correctly", &test_app::test_function_receives_wt_subclass_correctly);

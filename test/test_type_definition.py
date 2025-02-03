@@ -119,7 +119,10 @@ def test_functions_gets_called_correctly() -> None:
 
 
 def test_defaults_are_applied_correctly() -> None:
+    # NOTE test regular definition
     auth = tat.author()
     assert auth.name == 'test author'
     assert auth.id == 10
 
+    b = tat.post(id=1, title='test post title', status=tat.post_status.enum.waiting_approval, content='test post content', created_at=datetime.now().isoformat(), updated_at=datetime.now().isoformat())
+    assert b.author_id == 20

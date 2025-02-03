@@ -5,12 +5,10 @@ set(PYBIND11_PYTHON_VERSION 3.12)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -fPIC -O2 -march=native -flto=auto")
 set(pybind11_DIR ../../../../pg_definition/venv/lib/python3.12/site-packages/pybind11/share/cmake/pybind11)
 find_package(pybind11 REQUIRED)
-pybind11_add_module(${PROJECT_NAME} 
+pybind11_add_module(${PROJECT_NAME}
     wrapper.cpp
-    src/functions.cpp
-    src/init.cpp
 )
-target_include_directories(${PROJECT_NAME} PRIVATE ../../../base_types/cpp/lib/include)
+target_include_directories(${PROJECT_NAME} PRIVATE ../lib/include)
 target_include_directories(${PROJECT_NAME} PRIVATE ./include)
 target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PYBIND11_INCLUDE_DIRS})

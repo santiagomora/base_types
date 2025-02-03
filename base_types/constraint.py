@@ -29,6 +29,9 @@ from enum import \
     auto
 
 
+__all__ = ['literal', 'this', 'field', 'Operand', 'LogicOperand', 'length', 'OperandDefinitionContext']
+
+
 class OperandDefinitionContext:
     @abstractclassmethod
     def parse_field(cls, field_instance: field) -> str:
@@ -76,6 +79,7 @@ class LogicOperand(Operand[bool]):
     def __init__(self) -> None:
         self.source = None
         self.field_name = ''
+        self.name = None
         self.parent = None
 
     def merge(
@@ -263,7 +267,6 @@ class this(ArithmeticOperand):
         self._context = OperandDefinitionContext
 
     def __str__(self) -> str:
-        print(self._context)
         return self._context.parse_this(self)
 
     def __repr__(self) -> str:

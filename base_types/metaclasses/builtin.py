@@ -7,8 +7,8 @@ from pydantic_core import\
     core_schema
 from pydantic import\
     GetCoreSchemaHandler
-import base_types.cpp.wrapper as bw
-from .predicate import\
+import base_types.cpp.module.wrapper as bw
+from ..constraint import\
     LogicOperand,\
     literal,\
     OperandDefinitionContext
@@ -18,7 +18,7 @@ from abc import\
 import functools
 
 
-__all__ = ['builtin']
+__all__ = ['builtin', 'Undefined']
 
 
 Undefined = pydantic_core._pydantic_core.PydanticUndefined
@@ -27,7 +27,7 @@ DefaultAlias: TypeAlias = Union[literal, Undefined, None]
 
 class _BuiltinPydanticAdapt:
     def __init__(self, tp: type) -> None:
-        self._check_predicate: Optional[LogicOperand] = None
+        self._constraint: Optional[LogicOperand] = None
         self._default: DefaultAlias = Undefined
         self._tp = tp
 
@@ -44,21 +44,21 @@ class _BuiltinPydanticAdapt:
         self._default = default
 
     @property
-    def check_predicate(self):
-        return self._check_predicate
+    def constraint(self):
+        return self._constraint
 
-    @check_predicate.setter
-    def check_predicate(self, check_predicate: LogicOperand):
-        if isinstance(check_predicate, LogicOperand):
-            check_predicate.source = self._tp
-            check_predicate.propagate_definition(self._tp.__bases__[0], '', self._tp.definition_context())
-        elif check_predicate is None:
+    @constraint.setter
+    def constraint(self, constraint: LogicOperand):
+        if isinstance(constraint, LogicOperand):
+            constraint.source = self._tp
+            constraint.propagate_definition(self._tp.__bases__[0], '', self._tp.definition_context())
+        elif constraint is None:
             raise TypeError('Invalid check predicate')
-        self._check_predicate = check_predicate
+        self._constraint = constraint
 
     def validate_instance(self, instance):
-        if self._check_predicate is not None:
-            instance = self._check_predicate._validate(instance)
+        if self._constraint is not None:
+            instance = self._constraint._validate(instance)
         return instance
 
     def attempt_to_create_instance(
@@ -75,25 +75,26 @@ class builtin(type(bw.base)):
         def __init__(
             self, value: literal
         ) -> None:
-            self.default = value
+            if not isinstance(value, literal):
+                value = literal(value)
+            self._default = value
 
-        def __call__(self, target: type):
+        def __call__(self, target: type) -> type:
             assert isinstance(target, builtin)
-            assert target.pydantic_adapt.default is Undefined
-            target.pydantic_adapt.default = self.default
+            assert target._pydantic_adapt.default is Undefined
+            target._pydantic_adapt.default = self._default
             return target
 
-    class set_check_predicate:
+    class set_constraint:
         def __init__(
-            self, predicate: LogicOperand
+            self, constraint: LogicOperand
         ) -> None:
-            self.check_predicate = predicate
+            self._constraint = constraint
 
-        def __call__(self, target: type):
+        def __call__(self, target: type) -> type:
             assert isinstance(target, builtin)
-            print(target.pydantic_adapt.check_predicate)
-            assert target.pydantic_adapt.check_predicate is None
-            target.pydantic_adapt.check_predicate = self.check_predicate
+            assert target._pydantic_adapt.constraint is None
+            target._pydantic_adapt.constraint = self._constraint
             return target
 
     def __new__(
@@ -103,31 +104,34 @@ class builtin(type(bw.base)):
         if len(clsbases) > 1:
             raise TypeError(f'Class {cls} doesnt allow multiple bases')
 
+        if len(clsdict) > 2:
+            raise TypeError(f'Class {cls} doesnt allow member declarations')
+
         # def __repr__(self):
         #     return f'{self.__class__.__name__}({str(self)})'
 
         def __init__(self, *args: Any):
             value = clsbases[0](*args)
-            clsbases[0].__init__(self, rettype.pydantic_adapt.validate_instance(value))
+            clsbases[0].__init__(self, rettype._pydantic_adapt.validate_instance(value))
 
         rettype: type = super().__new__(
             cls, clsname, clsbases, clsdict | {
                 # '__repr__': __repr__,
                 '__init__': __init__
             })
-        clsbases[0].set_py_cls(rettype)
+        rettype.set_py_cls(clsname, rettype)
         return rettype
 
     @property
     @functools.cache
-    def pydantic_adapt(self) -> _BuiltinPydanticAdapt:
+    def _pydantic_adapt(self) -> _BuiltinPydanticAdapt:
         return _BuiltinPydanticAdapt(self)
 
     def __get_pydantic_core_schema__(
         self, source: type, handler: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
         return core_schema.with_info_plain_validator_function(
-            function=self.pydantic_adapt.attempt_to_create_instance)
+            function=self._pydantic_adapt.attempt_to_create_instance)
 
     @abstractmethod
     def definition_context(self) -> type[OperandDefinitionContext]:
