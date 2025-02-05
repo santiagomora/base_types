@@ -1,6 +1,16 @@
-# ifndef BTP_DEFINITION_WRAPPERS
-# define BTP_DEFINITION_WRAPPERS
+# ifndef BASE_TYPES_TYPES_HPP
+# define BASE_TYPES_TYPES_HPP
 
+
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <stdexcept>
+#include <limits>
+#include <map>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include <boost/date_time/gregorian/greg_date.hpp>
 #include <boost/date_time/gregorian/parsers.hpp>
@@ -10,14 +20,6 @@
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <cstddef>
-#include <cstdint>
-#include <memory>
-#include <stdexcept>
-#include <limits>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <map>
 
 
 namespace py = pybind11;
@@ -26,7 +28,7 @@ namespace ldt = boost::local_time;
 namespace dt = boost::gregorian;
 
 
-namespace btp 
+namespace base_types
 {
 
 
@@ -90,11 +92,13 @@ public:
     std::shared_ptr<T> wrapped_ptr () const {
         return _value;
     }
-    T value () const {
+    T& value () const {
         return *(_value.get());
     }
-    virtual std::string to_string () const = 0;
-    virtual py::object to_py (std::string subclass_name) const = 0;
+    template<typename V>
+    int compare (const wrapper<V>& other) const {
+        return compare_<T, V>(*this, other);
+    }
 };
 
 
@@ -107,7 +111,8 @@ T _check_value (V value) {
 };
 
 
-class boolean : public wrapper<boolean_> {
+class boolean : public wrapper<boolean_>
+{
 private:
     bool check_value (const std::string& value) const {
         if(value != "true" || value != "false"){
@@ -133,7 +138,8 @@ public:
 };
 
 
-class int1 : public wrapper<int1_> {
+class int1 : public wrapper<int1_>
+{
 public:
     using wrapper<int1_>::wrapper;
     static py_subclass_registry<int1> subclass_registry;
@@ -153,7 +159,8 @@ public:
 };
 
 
-class int2 : public wrapper<int2_> {
+class int2 : public wrapper<int2_>
+{
 public:
     using wrapper<int2_>::wrapper;
     static py_subclass_registry<int2> subclass_registry;
@@ -173,7 +180,8 @@ public:
 };
 
 
-class int4 : public wrapper<int4_> {
+class int4 : public wrapper<int4_>
+{
 public:
     using wrapper<int4_>::wrapper;
     static py_subclass_registry<int4> subclass_registry;
@@ -193,7 +201,8 @@ public:
 };
 
 
-class int8 : public wrapper<int8_> {
+class int8 : public wrapper<int8_>
+{
 public:
     using wrapper<int8_>::wrapper;
     static py_subclass_registry<int8> subclass_registry;
@@ -214,7 +223,8 @@ public:
 
 
 
-class float4 : public wrapper<float4_> {
+class float4 : public wrapper<float4_>
+{
 public:
     using wrapper<float4_>::wrapper;
     // float4(double v) : wrapper<float4_>(_check_value<float4_, double>(v)) {}
@@ -234,7 +244,8 @@ public:
 };
 
 
-class float8 : public wrapper<float8_> {
+class float8 : public wrapper<float8_>
+{
 public:
     using wrapper<float8_>::wrapper;
     // float8(double v) : wrapper<float8_>(_check_value<float8_, double>(v)) {}
@@ -254,7 +265,8 @@ public:
 };
 
 
-class text : public wrapper<text_> {
+class text : public wrapper<text_>
+{
 public:
     using wrapper<text_>::wrapper;
     static py_subclass_registry<text> subclass_registry;
@@ -272,20 +284,20 @@ public:
 };
 
 
-class timestamptz : public wrapper<timestamptz_> {
-private:
-    timestamptz_ parse_from_string (std::string value) const {
-        ldt::time_zone_ptr zone(new ldt::posix_time_zone("UTC"));
-        return timestamptz_(pt::from_iso_extended_string(value.replace(10, 1, "T")), zone);
-    }
+class timestamptz : public wrapper<timestamptz_>
+{
 public:
     using wrapper<timestamptz_>::wrapper;
     static py_subclass_registry<timestamptz> subclass_registry;
     timestamptz(const timestamptz& other) : wrapper<timestamptz_>(other) {}
-    timestamptz(std::string value) : wrapper<timestamptz_>(parse_from_string(value)) {}
+    timestamptz(std::string value) : wrapper<timestamptz_>(timestamptz::parse_from_string(value)) {}
     timestamptz& operator=(const timestamptz& other) {
         _value = other.wrapped_ptr();
         return *this;
+    }
+    static timestamptz_ parse_from_string (std::string value) {
+        ldt::time_zone_ptr zone(new ldt::posix_time_zone("UTC"));
+        return timestamptz_(pt::from_iso_extended_string(value.replace(10, 1, "T")), zone);
     }
     std::string to_string() const {
         std::ostringstream oss;
@@ -301,19 +313,19 @@ public:
 };
 
 
-class date : public wrapper<date_> {
-private:
-    date_ parse_from_string (const std::string value) const {
-        return (date_) dt::from_string(value);
-    }
+class date : public wrapper<date_>
+{
 public:
     using wrapper<date_>::wrapper;
     static py_subclass_registry<date> subclass_registry;
     date(const date& other) : wrapper<date_>(other) {}
-    date(std::string value) : wrapper<date_>(parse_from_string(value)) {}
+    date(std::string value) : wrapper<date_>(date::parse_from_string(value)) {}
     date& operator=(const date& other) {
         _value = other.wrapped_ptr();
         return *this;
+    }
+    static date_ parse_from_string (const std::string value) {
+        return (date_) dt::from_string(value);
     }
     std::string to_string() const {
         return to_iso_extended_string(value());

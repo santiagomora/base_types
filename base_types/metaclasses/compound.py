@@ -2,7 +2,7 @@ from typing import\
     Any
 from pydantic.fields import\
     FieldInfo
-import base_types.cpp.module.wrapper as bw
+from base_types.cpp.module.wrapper import pybind_base
 import functools
 from pydantic import\
     create_model,\
@@ -40,17 +40,18 @@ class _CompoundPydanticAdapt:
     def model(self) -> BaseModel:
         members = {}
         for base in self._tp._cpp_bases:
-            for name, info in base.get_py_cls(base.__name__).model_fields.items():
+            for name, info in base.get_py_cls(base.qualified_name).model_fields.items():
                 members[name] = (info.annotation, info.default, )
         for ix in range(0, len(self._tp._cpp_field_names)):
             field_name: str = self._tp._cpp_field_names[ix]
             field_type: str = self._tp._cpp_field_types[ix]
-            members[field_name] = (field_type.get_py_cls(field_type.__name__), Undefined, )
+            print(field_type, field_type.qualified_name)
+            members[field_name] = (field_type.get_py_cls(field_type.qualified_name), Undefined, )
         model: BaseModel = create_model(
             f'{self._tp.__name__}_Model', **members
         )
         for base in self._tp._cpp_bases:
-            for name, info in base.get_py_cls(base.__name__).model_fields.items():
+            for name, info in base.get_py_cls(base.qualified_name).model_fields.items():
                 model.model_fields[name].metadata += info.metadata
                 if hasattr(info, 'default_factory'):
                     model.model_fields[name].default_factory = info.default_factory
@@ -67,7 +68,7 @@ class _CompoundPydanticAdapt:
         return self._tp(**value)
 
 
-class compound(type(bw.base)):
+class compound(type(pybind_base)):
     class set_default:
         def __init__(
             self, *, value: Operand, field: str
@@ -110,12 +111,12 @@ class compound(type(bw.base)):
             return target
 
     def __new__(
-        cls, clsname, clsbases, namespace
+        cls, clsname: str, clsbases: tuple[type], clsdict: dict[str, Any]
     ) -> type:
         if len(clsbases) != 1:
             raise TypeError(f'compound type {cls} only allows one base class')
 
-        if len(namespace) > 2:
+        if len(clsdict) > 2:
             raise TypeError(f'Class {cls} doesnt allow member declarations')
 
         def __init__(self, *args: Any, **data: dict[str, Any]) -> None:
@@ -134,10 +135,10 @@ class compound(type(bw.base)):
             return f'{self.__class__.__name__}({", ".join([f"{name}={repr(getattr(self, name))}" for name in self.__class__.model_fields])})'
 
         rettype: type = super().__new__(
-            cls, clsname, clsbases, namespace | {
+            cls, clsname, clsbases, clsdict | {
                 '__init__': __init__, '__repr__': __repr__
             })
-        rettype.set_py_cls(clsname, rettype)
+        rettype.set_py_cls(rettype.qualified_name, rettype)
         return rettype
 
     @property

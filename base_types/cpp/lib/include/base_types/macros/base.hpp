@@ -6,6 +6,7 @@
 #include <boost/preprocessor/iteration/iterate.hpp>
 #include <boost/preprocessor/facilities/empty.hpp> 
 #include <boost/preprocessor/stringize.hpp>
+#include <boost/preprocessor/cat.hpp>
 
 
 #define DATACLASS_MEMBER(BASE_TP, NAME)(\
@@ -38,25 +39,82 @@
 
 
 #define ENUM_QUALIFIED_UNDERLYING_CLASS(ENUM_DEF)\
-    BOOST_PP_CAT(T_QUALNAME(T_NAMETUPLE(ENUM_DEF)), _enum)
+    BOOST_PP_TUPLE_ELEM(2, ENUM_DEF)
 
 
 #define ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)\
     BOOST_PP_CAT(T_NAME(T_NAMETUPLE(ENUM_DEF)), _enum)
 
 
+#define ENUM_MEMBERS(ENUM_DEF)\
+    BOOST_PP_TUPLE_ELEM(4, ENUM_DEF)
+
+
 #define ENUM_DEFINITION(NAME, CLS, MEMBERS)(\
     NAME,\
     CLS,\
+    BOOST_PP_CAT(T_QUALNAME(CLS), _enum),\
+    BOOST_PP_EMPTY(),\
     MEMBERS\
 )
 
 
-#define TYPE_DEFINITION(NAME, CLS, PY_BASES, BASES)(\
+#define T_BASE_PRIMITIVE(TYPE_DEF)\
+    BOOST_PP_TUPLE_ELEM(2, TYPE_DEF)
+
+
+#define T_PY_PRIMITIVE(TYPE_DEF)\
+    BOOST_PP_TUPLE_ELEM(3, TYPE_DEF)
+
+
+#define TYPE_DEFINITION(NAME, CLS, BASE_PRIMITIVE, LINK_PRIMITIVE)(\
     NAME,\
     CLS,\
-    PY_BASES,\
-    BASES\
+    BASE_PRIMITIVE,\
+    LINK_PRIMITIVE\
+)
+
+
+#define T_ALIAS_BASE(ALIAS_DEF)\
+    BOOST_PP_TUPLE_ELEM(4, ALIAS_DEF)
+
+
+#define T_CONSTRUCTORS(TYPE_DEF)\
+    BOOST_PP_CAT(T_MACRO_NAME(TYPE_DEF), _CONSTRUCTORS)
+
+
+#define T_ALIAS_INHERITANCE_CHAIN(ALIAS_DEF)\
+    BOOST_PP_CAT(T_MACRO_NAME(ALIAS_DEF), _INHERITANCE_CHAIN)
+
+
+#define T_ALIAS_ORIGIN(ALIAS_DEF)\
+    BOOST_PP_SEQ_HEAD(T_ALIAS_INHERITANCE_CHAIN(ALIAS_DEF))
+
+
+#define TYPE_DEFINITION_ALIAS(NAME, CLS, BASE)(\
+    NAME,\
+    CLS,\
+    T_BASE_PRIMITIVE(BASE),\
+    T_PY_PRIMITIVE(BASE),\
+    BASE\
+)
+
+
+#define ENUM_DEFINITION_ALIAS(NAME, CLS, BASE)(\
+    NAME,\
+    CLS,\
+    T_BASE_PRIMITIVE(BASE),\
+    BOOST_PP_EMPTY(),\
+    BASE\
+)
+
+
+#define DATACLASS_DEFINITION_ALIAS(NAME, CLS, BASE)(\
+    NAME,\
+    CLS,\
+    BOOST_PP_EMPTY(),\
+    BOOST_PP_EMPTY(),\
+    BASE\
 )
 
 

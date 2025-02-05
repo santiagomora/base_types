@@ -21,11 +21,11 @@ def test_types_get_instanced_correctly() -> None:
     created_at = datetime.now(timezone.utc).isoformat()
     updated_at = datetime.now(timezone.utc).isoformat()
     test_post = tat.post(1, 'test title', tat.post_status.enum.waiting_approval, test_author.id, 'test content', created_at, updated_at)
-    assert test_post.id == 1
-    assert test_post.title == 'test title'
-    assert test_post.content == 'test content'
-    assert test_post.created_at == created_at
-    assert test_post.updated_at == updated_at
+    assert test_post.id.compare(1) == 0
+    assert test_post.title.compare('test title') == 0
+    assert test_post.content.compare('test content') == 0
+    assert test_post.created_at.compare(created_at) == 0
+    assert test_post.updated_at.compare(updated_at) == 0
 
     def test_create_comment_post_from_instances() -> tat.comment_post:
         author = tat.author(1, 'test author')
@@ -69,8 +69,8 @@ def test_functions_gets_called_correctly() -> None:
         return tat.author(id, name)
     a = tw.test_function_receives_author_correctly(test_create()).to_py()
     assert isinstance(a, tat.author)
-    assert a.id == 1
-    assert a.name == 'hola'
+    assert a.id.compare(1) == 1
+    assert a.name.compare('hola') == 'hola'
 
     def test_create_comment_post_from_instances() -> tat.comment_post:
         author = tat.author(1, 'test author')
@@ -121,8 +121,8 @@ def test_functions_gets_called_correctly() -> None:
 def test_defaults_are_applied_correctly() -> None:
     # NOTE test regular definition
     auth = tat.author()
-    assert auth.name == 'test author'
-    assert auth.id == 10
+    assert auth.name.compare('test author') == 0
+    assert auth.id.compare(10) == 0
 
     b = tat.post(id=1, title='test post title', status=tat.post_status.enum.waiting_approval, content='test post content', created_at=datetime.now().isoformat(), updated_at=datetime.now().isoformat())
-    assert b.author_id == 20
+    assert b.author_id.compare(20) == 0

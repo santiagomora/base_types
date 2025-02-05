@@ -1,5 +1,5 @@
 from .cpp.module import wrapper as bw
-from .metaclasses import builtin
+from .metaclasses.builtin import builtin
 
 
 class int2(bw.int2, metaclass=builtin):

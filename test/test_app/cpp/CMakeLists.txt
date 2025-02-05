@@ -14,4 +14,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE ../../../base_types/cpp/lib/i
 target_include_directories(${PROJECT_NAME} PRIVATE ./include)
 target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PYBIND11_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE /home/smora/sgs/dev/base_types/base_types/cpp/lib/libbase_types.so)
+target_link_libraries(${PROJECT_NAME} PRIVATE /home/smora/sgs/dev/base_types/base_types/cpp/lib/build/libbase_types.so)

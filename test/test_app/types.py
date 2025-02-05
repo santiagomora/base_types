@@ -2,9 +2,6 @@ import base_types as bt
 import test_app.cpp.wrapper as ta
 
 
-__all__ = ['author', 'with_timestamps', 'authored', 'post_status', 'post', 'comment', 'comment_post', 'domain']
-
-
 @bt.compound.set_default(
     value=bt.literal(10), field='id')
 @bt.compound.set_default(
@@ -44,5 +41,5 @@ class comment_post(ta.comment_post, metaclass=bt.compound):
 
 @bt.builtin.set_default(bt.literal(1))
 @bt.builtin.set_constraint(bt.this() > bt.literal(0))
-class domain(bt.int8, metaclass=bt.builtin):
+class domain(ta.domain, metaclass=bt.builtin):
     pass

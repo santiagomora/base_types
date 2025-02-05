@@ -448,7 +448,7 @@ class _lt(LogicOperandSpec):
         super().__init__(operand1, operand2, '<')
 
     def value(self, info: dict[str, Any]) -> bool:
-        return self.operand1.value(info) < self.operand2.value(info)
+        return self.operand1.value(info).compare(self.operand2.value(info)) < 0
 
 
 class _gt(LogicOperandSpec):
@@ -456,7 +456,7 @@ class _gt(LogicOperandSpec):
         super().__init__(operand1, operand2, '>')
 
     def value(self, info: dict[str, Any]) -> bool:
-        return self.operand1.value(info) > self.operand2.value(info)
+        return self.operand1.value(info).compare(self.operand2.value(info)) > 0
 
 
 class _ge(LogicOperandSpec):
@@ -464,7 +464,7 @@ class _ge(LogicOperandSpec):
         super().__init__(operand1, operand2, '>=')
 
     def value(self, info: dict[str, Any]) -> bool:
-        return self.operand1.value(info) >= self.operand2.value(info)
+        return self.operand1.value(info).compare(self.operand2.value(info)) >= 0
 
 
 class _le(LogicOperandSpec):
@@ -472,7 +472,7 @@ class _le(LogicOperandSpec):
         super().__init__(operand1, operand2, '<=')
 
     def value(self, info: dict[str, Any]) -> bool:
-        return self.operand1.value(info) <= self.operand2.value(info)
+        return self.operand1.value(info).compare(self.operand2.value(info)) <= 0
 
 
 # f'Check predicate types must be compatible "{source!r}"'
@@ -482,7 +482,7 @@ class _eq(LogicOperandSpec):
         super().__init__(operand1, operand2, '==')
 
     def value(self, info: dict[str, Any]) -> bool:
-        return self.operand1.value(info) == self.operand2.value(info)
+        return self.operand1.value(info).compare(self.operand2.value(info)) == 0
 
 
 class _ne(LogicOperandSpec):
@@ -490,7 +490,7 @@ class _ne(LogicOperandSpec):
         super().__init__(operand1, operand2, '!=')
 
     def value(self, info: dict[str, Any]) -> bool:
-        return self.operand1.value(info) != self.operand2.value(info)
+        return self.operand1.value(info).compare(self.operand2.value(info)) != 0
 
 
 class _and(LogicOperation):

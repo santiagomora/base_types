@@ -1,7 +1,7 @@
 from typing import\
     Any,\
     Optional
-import base_types.cpp.module.wrapper as bw
+from base_types.cpp.module.wrapper import pybind_base
 from pydantic_core import\
     core_schema
 from pydantic import\
@@ -44,7 +44,7 @@ class _EnumPydanticAdapt:
         return value if isinstance(value, self._tp) else self._tp(value)
 
 
-class enum(type(bw.base)):
+class enum(type(pybind_base)):
     class set_default:
         def __init__(
             self, value: literal
@@ -70,7 +70,7 @@ class enum(type(bw.base)):
             raise TypeError(f'Class {cls} doesnt allow member declarations')
 
         rettype: type = super().__new__(cls, clsname, clsbases, clsdict)
-        rettype.set_py_cls(clsname, rettype)
+        rettype.set_py_cls(rettype.qualified_name, rettype)
         return rettype
 
     def __get_pydantic_core_schema__(

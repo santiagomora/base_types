@@ -2,7 +2,7 @@
 #include <iostream>
 
 
-#include "../include/test_app/types.hpp"
+#include "test_app/types.hpp"
 
 
 namespace ta = test_app;

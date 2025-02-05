@@ -74,4 +74,184 @@
     REGISTER_PY_STR_LOGIC_OVERLOAD((CLS), "__eq__", ==, PY, T, U);\
     REGISTER_PY_STR_LOGIC_OVERLOAD((CLS), "__ne__", !=, PY, T, U)
 
+    // bl.def("__eq__", [](const base_types::boolean& self, const base_types::boolean& other){
+    //         return self.value() == other.value();
+    //     })
+    //     .def("__eq__", [](const base_types::boolean& self, const py::bool_& other){
+    //         return self.value() == other.cast<bool>();
+    //     })
+    //     .def("__ne__", [](const base_types::boolean& self, const base_types::boolean& other){
+    //         return self.value() != other.value();
+    //     })
+    //     .def("__ne__", [](const base_types::boolean& self, const py::bool_& other){
+    //         return self.value() != other.cast<bool>();
+    //     })
+    //     .def("__and__", [](const base_types::boolean& self, const base_types::boolean& other){
+    //         return self.value() && other.value();
+    //     })
+    //     .def("__and__", [](const base_types::boolean& self, const py::bool_& other){
+    //         return self.value() && other.cast<bool>();
+    //     })
+    //     .def("__or__", [](const base_types::boolean& self, const base_types::boolean& other){
+    //         return self.value() || other.value();
+    //     })
+    //     .def("__or__", [](const base_types::boolean& self, const py::bool_& other){
+    //         return self.value() || other.cast<bool>();
+    //     })
+    //     .def("__str__", [](const base_types::boolean& self){
+    //         return std::to_string(self.value());
+    //     });
+    
+    // base_types::int1 OVERLOADS
+//     MAKE_ARITHMETIC_COMPATIBLE(i1, base_types::int1, base_types::int1, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i1, base_types::int1, base_types::int2, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i1, base_types::int1, base_types::int4, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i1, base_types::int1, base_types::int8, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i1, base_types::int1, base_types::float4, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i1, base_types::int1, base_types::float8, base_types::int8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::int_, base_types::int1, base_types::int8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::float_, base_types::int1, base_types::int8_);
+//     
+//     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, base_types::int1, base_types::int1);
+//     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, base_types::int1, base_types::int2);
+//     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, base_types::int1, base_types::int4);
+//     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, base_types::int1, base_types::int8);
+//     REGISTER_PY_ARITHMETIC_OVERLOAD(i1, "__mod__", +, py::int_, base_types::int1, base_types::int8_);
+//     
+//     MAKE_LOGIC_OPERABLE(i1, base_types::int1, base_types::int1);
+//     MAKE_LOGIC_OPERABLE(i1, base_types::int1, base_types::int2);
+//     MAKE_LOGIC_OPERABLE(i1, base_types::int1, base_types::int4);
+//     MAKE_LOGIC_OPERABLE(i1, base_types::int1, base_types::int8);
+//     MAKE_LOGIC_OPERABLE(i1, base_types::int1, base_types::float4);
+//     MAKE_LOGIC_OPERABLE(i1, base_types::int1, base_types::float8);
+//     MAKE_PY_LOGIC_OPERABLE(i1, py::int_, base_types::int1, base_types::int8_);
+//     MAKE_PY_LOGIC_OPERABLE(i1, py::float_, base_types::int1, base_types::float8_);
+//     
+//     // base_types::int2 OVERLOADS
+//     MAKE_ARITHMETIC_COMPATIBLE(i2, base_types::int2, base_types::int2, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i2, base_types::int2, base_types::int1, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i2, base_types::int2, base_types::int2, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i2, base_types::int2, base_types::int4, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i2, base_types::int2, base_types::int8, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i2, base_types::int2, base_types::float4, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i2, base_types::int2, base_types::float8, base_types::int8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::int_, base_types::int2, base_types::int8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(i1, py::float_, base_types::int2, base_types::int8_);
+//     
+//     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, base_types::int2, base_types::int1);
+//     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, base_types::int2, base_types::int2);
+//     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, base_types::int2, base_types::int4);
+//     REGISTER_ARITHMETIC_OVERLOAD(i1, "__mod__", %, base_types::int2, base_types::int8);
+//     REGISTER_PY_ARITHMETIC_OVERLOAD(i1, "__mod__", %, py::int_, base_types::int2, base_types::int8_);
+//     
+//     MAKE_LOGIC_OPERABLE(i2, base_types::int2, base_types::int1);
+//     MAKE_LOGIC_OPERABLE(i2, base_types::int2, base_types::int2);
+//     MAKE_LOGIC_OPERABLE(i2, base_types::int2, base_types::int2);
+//     MAKE_LOGIC_OPERABLE(i2, base_types::int2, base_types::int4);
+//     MAKE_LOGIC_OPERABLE(i2, base_types::int2, base_types::int8);
+//     MAKE_LOGIC_OPERABLE(i2, base_types::int2, base_types::float4);
+//     MAKE_LOGIC_OPERABLE(i2, base_types::int2, base_types::float8);
+//     MAKE_PY_LOGIC_OPERABLE(i2, py::int_, base_types::int2, base_types::int8_);
+//     MAKE_PY_LOGIC_OPERABLE(i2, py::float_, base_types::int2, base_types::float8_);
+//     
+//     // base_types::int4 OVERLOADS
+//     MAKE_ARITHMETIC_COMPATIBLE(i4, base_types::int4, base_types::int1, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i4, base_types::int4, base_types::int2, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i4, base_types::int4, base_types::int4, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i4, base_types::int4, base_types::int8, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i4, base_types::int4, base_types::float4, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i4, base_types::int4, base_types::float8, base_types::int8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(i4, py::int_, base_types::int4, base_types::int8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(i4, py::float_, base_types::int4, base_types::int8_);
+//     
+//     REGISTER_ARITHMETIC_OVERLOAD(i4, "__mod__", %, base_types::int4, base_types::int1);
+//     REGISTER_ARITHMETIC_OVERLOAD(i4, "__mod__", %, base_types::int4, base_types::int2);
+//     REGISTER_ARITHMETIC_OVERLOAD(i4, "__mod__", %, base_types::int4, base_types::int4);
+//     REGISTER_ARITHMETIC_OVERLOAD(i4, "__mod__", %, base_types::int4, base_types::int8);
+//     REGISTER_PY_ARITHMETIC_OVERLOAD(i4, "__mod__", %, py::int_, base_types::int4, base_types::int8_);
+//     
+//     MAKE_LOGIC_OPERABLE(i4, base_types::int4, base_types::int1);
+//     MAKE_LOGIC_OPERABLE(i4, base_types::int4, base_types::int2);
+//     MAKE_LOGIC_OPERABLE(i4, base_types::int4, base_types::int4);
+//     MAKE_LOGIC_OPERABLE(i4, base_types::int4, base_types::int8);
+//     MAKE_LOGIC_OPERABLE(i4, base_types::int4, base_types::float4);
+//     MAKE_LOGIC_OPERABLE(i4, base_types::int4, base_types::float8);
+//     MAKE_PY_LOGIC_OPERABLE(i4, py::int_, base_types::int4, base_types::int8_);
+//     MAKE_PY_LOGIC_OPERABLE(i4, py::float_, base_types::int4, base_types::float8_);
+//     
+//     // base_types::int8 OVERLOADS
+//     MAKE_ARITHMETIC_COMPATIBLE(i8, base_types::int8, base_types::int1, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i8, base_types::int8, base_types::int2, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i8, base_types::int8, base_types::int4, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i8, base_types::int8, base_types::int8, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i8, base_types::int8, base_types::float4, base_types::int8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(i8, base_types::int8, base_types::float8, base_types::int8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(i8, py::int_, base_types::int8, base_types::int8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(i8, py::float_, base_types::int8, base_types::int8_);
+//     
+//     REGISTER_ARITHMETIC_OVERLOAD(i8, "__mod__", %, base_types::int8, base_types::int1);
+//     REGISTER_ARITHMETIC_OVERLOAD(i8, "__mod__", %, base_types::int8, base_types::int2);
+//     REGISTER_ARITHMETIC_OVERLOAD(i8, "__mod__", %, base_types::int8, base_types::int4);
+//     REGISTER_ARITHMETIC_OVERLOAD(i8, "__mod__", %, base_types::int8, base_types::int8);
+//     REGISTER_PY_ARITHMETIC_OVERLOAD(i8, "__mod__", %, py::int_, base_types::int8, base_types::int8_);
+//     
+//     MAKE_LOGIC_OPERABLE(i8, base_types::int8, base_types::int1);
+//     MAKE_LOGIC_OPERABLE(i8, base_types::int8, base_types::int2);
+//     MAKE_LOGIC_OPERABLE(i8, base_types::int8, base_types::int4);
+//     MAKE_LOGIC_OPERABLE(i8, base_types::int8, base_types::int8);
+//     MAKE_LOGIC_OPERABLE(i8, base_types::int8, base_types::float4);
+//     MAKE_LOGIC_OPERABLE(i8, base_types::int8, base_types::float8);
+//     MAKE_PY_LOGIC_OPERABLE(i8, py::int_, base_types::int8, base_types::int8_);
+//     MAKE_PY_LOGIC_OPERABLE(i8, py::float_, base_types::int8, base_types::float8_);
+//     
+//     // base_types::float4 OVERLOADS
+//     MAKE_ARITHMETIC_COMPATIBLE(f4, base_types::float4, base_types::int1, base_types::float8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(f4, base_types::float4, base_types::int2, base_types::float8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(f4, base_types::float4, base_types::int4, base_types::float8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(f4, base_types::float4, base_types::int8, base_types::float8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(f4, base_types::float4, base_types::float4, base_types::float8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(f4, base_types::float4, base_types::float8, base_types::float8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(f4, py::int_, base_types::float4, base_types::float8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(f4, py::float_, base_types::float4, base_types::float8_);
+//     
+//     MAKE_LOGIC_OPERABLE(f4, base_types::float4, base_types::int1);
+//     MAKE_LOGIC_OPERABLE(f4, base_types::float4, base_types::int2);
+//     MAKE_LOGIC_OPERABLE(f4, base_types::float4, base_types::int4);
+//     MAKE_LOGIC_OPERABLE(f4, base_types::float4, base_types::int8);
+//     MAKE_LOGIC_OPERABLE(f4, base_types::float4, base_types::float4);
+//     MAKE_LOGIC_OPERABLE(f4, base_types::float4, base_types::float8);
+//     MAKE_PY_LOGIC_OPERABLE(f4, py::int_, base_types::float4, base_types::int8_);
+//     MAKE_PY_LOGIC_OPERABLE(f4, py::float_, base_types::float4, base_types::float8_);
+//     
+//     // base_types::float8 OVERLOADS
+//     MAKE_ARITHMETIC_COMPATIBLE(f8, base_types::float8, base_types::int1, base_types::float8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(f8, base_types::float8, base_types::int2, base_types::float8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(f8, base_types::float8, base_types::int4, base_types::float8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(f8, base_types::float8, base_types::int8, base_types::float8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(f8, base_types::float8, base_types::float4, base_types::float8_);
+//     MAKE_ARITHMETIC_COMPATIBLE(f8, base_types::float8, base_types::float8, base_types::float8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(f8, py::int_, base_types::float8, base_types::float8_);
+//     MAKE_PY_ARITHMETIC_COMPATIBLE(f8, py::float_, base_types::float8, base_types::float8_);
+//     
+//     MAKE_LOGIC_OPERABLE(f8, base_types::float8, base_types::int1);
+//     MAKE_LOGIC_OPERABLE(f8, base_types::float8, base_types::int2);
+//     MAKE_LOGIC_OPERABLE(f8, base_types::float8, base_types::int4);
+//     MAKE_LOGIC_OPERABLE(f8, base_types::float8, base_types::int8);
+//     MAKE_LOGIC_OPERABLE(f8, base_types::float8, base_types::float4);
+//     MAKE_LOGIC_OPERABLE(f8, base_types::float8, base_types::float8);
+//     MAKE_PY_LOGIC_OPERABLE(f8, py::int_, base_types::float8, base_types::int8_);
+//     MAKE_PY_LOGIC_OPERABLE(f8, py::float_, base_types::float8, base_types::float8_);
+//     
+//     // MAKE_PY_STRING_COMPARABLE(tz, py::str, timetz_py, std::string);
+//     // base_types::text overloads
+//     MAKE_PY_STRING_COMPARABLE(tx, py::str, base_types::text, std::string);
+//     
+//     // base_types::timestamptz overloads
+//     MAKE_PY_STRING_COMPARABLE(dtz, py::str, base_types::timestamptz, std::string);
+//     MAKE_LOGIC_OPERABLE(dtz, base_types::timestamptz, base_types::timestamptz);
+//     
+//     // base_types::date overloads
+//     MAKE_PY_STRING_COMPARABLE(dt, py::str, base_types::date, std::string);
+//     MAKE_LOGIC_OPERABLE(dt, base_types::date, base_types::date);
+
 # endif

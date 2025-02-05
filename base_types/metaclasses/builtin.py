@@ -7,7 +7,7 @@ from pydantic_core import\
     core_schema
 from pydantic import\
     GetCoreSchemaHandler
-import base_types.cpp.module.wrapper as bw
+from base_types.cpp.module.wrapper import pybind_base
 from ..constraint import\
     LogicOperand,\
     literal,\
@@ -70,7 +70,7 @@ class _BuiltinPydanticAdapt:
         return value if isinstance(value, self._tp) else self._tp(value)
 
 
-class builtin(type(bw.base)):
+class builtin(type(pybind_base)):
     class set_default:
         def __init__(
             self, value: literal
@@ -119,7 +119,8 @@ class builtin(type(bw.base)):
                 # '__repr__': __repr__,
                 '__init__': __init__
             })
-        rettype.set_py_cls(clsname, rettype)
+        print(rettype)
+        rettype.set_py_cls(rettype.qualified_name, rettype)
         return rettype
 
     @property
