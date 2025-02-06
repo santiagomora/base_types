@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 
-#include "base_types/macros/register.hpp"
-#include "base_types/compare.hpp"
+#include "core_types/macros/register.hpp"
+#include "core_types/compare.hpp"
 
 #include "test_app/types.hpp"
 #include "test_app/definition.hpp"
@@ -10,7 +10,7 @@
 namespace py = pybind11;
 
 
-// DEBUG clear && g++ -P -E -I/usr/include/boost -I../../../base_types/cpp -I./ wrapper.cpp
+// DEBUG clear && g++ -P -E -I/usr/include/boost -I../../../core_types/cpp -I./ wrapper.cpp
 
 
 PYBIND11_MODULE (wrapper, m) {

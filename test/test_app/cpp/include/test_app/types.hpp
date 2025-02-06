@@ -2,12 +2,12 @@
 #define TEST_APP_TYPES
 
 
-#include "base_types/macros/definition.hpp"
-#include "base_types/types.hpp"
+#include "core_types/macros/definition.hpp"
+#include "core_types/types.hpp"
 #include "test_app/definition.hpp"
 
 
-// DEBUG clear && g++ -P -E -I/usr/include/boost -I../../../../../base_types/cpp -I./ types.hpp
+// DEBUG clear && g++ -P -E -I/usr/include/boost -I../../../../../core_types/cpp -I./ types.hpp
 
 namespace test_app {
 

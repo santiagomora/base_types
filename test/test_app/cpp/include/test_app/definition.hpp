@@ -2,7 +2,7 @@
 #define TEST_APP_DEFINITIONS
 
 
-#include "base_types/macros/definition.hpp"
+#include "core_types/macros/definition.hpp"
 
 
 #define TEST_APP_AUTHOR NO_BASES_DATACLASS_DEFINITION(\

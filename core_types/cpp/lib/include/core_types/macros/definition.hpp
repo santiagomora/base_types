@@ -9,7 +9,7 @@
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/algorithm/string/find.hpp>
 #include <sstream>
-#include "base_types/macros/base.hpp"
+#include "core_types/macros/base.hpp"
 
 
 #define CL_INHERIT_BASES(r, data, elem)\
@@ -66,7 +66,7 @@ class T_NAME(T_NAMETUPLE(CLASS_DEF))\
     )\
 {\
 public:\
-    static base_types::py_subclass_registry<BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))> subclass_registry;\
+    static core_types::py_subclass_registry<BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))> subclass_registry;\
     BOOST_PP_SEQ_FOR_EACH(CL_MEMBER_DECLARATION, ;, T_DIRECT_MEMBERS(CLASS_DEF))\
 \
     T_NAME(T_NAMETUPLE(CLASS_DEF))()\
@@ -134,11 +134,11 @@ public:\
 enum ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF) {\
 BOOST_PP_SEQ_ENUM(ENUM_MEMBERS(ENUM_DEF))\
 };\
-class T_NAME(T_NAMETUPLE(ENUM_DEF)) : public base_types::wrapper<ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)>\
+class T_NAME(T_NAMETUPLE(ENUM_DEF)) : public core_types::wrapper<ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)>\
 {\
 public:\
-    static base_types::py_subclass_registry<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))> subclass_registry;\
-    using base_types::wrapper<ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)>::wrapper;\
+    static core_types::py_subclass_registry<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))> subclass_registry;\
+    using core_types::wrapper<ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)>::wrapper;\
     T_NAME(T_NAMETUPLE(ENUM_DEF))(const T_NAME(T_NAMETUPLE(ENUM_DEF))& other) : wrapper<ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF)>(other) {}\
     static std::string static_to_string(const ENUM_UNQUALIFIED_UNDERLYING_CLASS(ENUM_DEF) value) {\
         switch(value){\
@@ -162,7 +162,7 @@ public:\
 #define CPP_ALIASDEF_DECLARATION(ALIAS_DEF)\
 class T_NAME(T_NAMETUPLE(ALIAS_DEF)) : public T_QUALNAME(T_NAMETUPLE(T_ALIAS_BASE(ALIAS_DEF))) {\
 public:\
-static base_types::py_subclass_registry<BOOST_PP_IF(\
+static core_types::py_subclass_registry<BOOST_PP_IF(\
     BOOST_PP_IS_EMPTY(T_BASE_PRIMITIVE(ALIAS_DEF)),\
     BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(T_ALIAS_BASE(ALIAS_DEF))),\
     T_QUALNAME(T_NAMETUPLE(T_ALIAS_ORIGIN(ALIAS_DEF)))\
@@ -182,8 +182,8 @@ T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& 
 
 #define BTP_BOOLEAN TYPE_DEFINITION(\
     BTP_BOOLEAN,\
-    (base_types, boolean),\
-    base_types::boolean_,\
+    (core_types, boolean),\
+    core_types::boolean_,\
     py::bool_\
 )
 #define BTP_BOOLEAN_CONSTRUCTORS (BTP_BOOLEAN)
@@ -191,8 +191,8 @@ T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& 
 
 #define BTP_INT1 TYPE_DEFINITION(\
     BTP_INT1,\
-    (base_types, int1),\
-    base_types::int1_,\
+    (core_types, int1),\
+    core_types::int1_,\
     py::int_\
 )
 #define BTP_INT1_CONSTRUCTORS (BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_INT8)(BTP_FLOAT4)(BTP_FLOAT8)
@@ -200,8 +200,8 @@ T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& 
 
 #define BTP_INT2 TYPE_DEFINITION(\
     BTP_INT2,\
-    (base_types, int2),\
-    base_types::int2_,\
+    (core_types, int2),\
+    core_types::int2_,\
     py::int_\
 )
 #define BTP_INT2_CONSTRUCTORS (BTP_INT2)(BTP_INT1)(BTP_INT4)(BTP_INT8)(BTP_FLOAT4)(BTP_FLOAT8)
@@ -209,8 +209,8 @@ T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& 
 
 #define BTP_INT4 TYPE_DEFINITION(\
     BTP_INT4,\
-    (base_types, int4),\
-    base_types::int4_,\
+    (core_types, int4),\
+    core_types::int4_,\
     py::int_\
 )
 #define BTP_INT4_CONSTRUCTORS (BTP_INT4)(BTP_INT1)(BTP_INT2)(BTP_INT8)(BTP_FLOAT4)(BTP_FLOAT8)
@@ -218,8 +218,8 @@ T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& 
 
 #define BTP_INT8 TYPE_DEFINITION(\
     BTP_INT8,\
-    (base_types, int8),\
-    base_types::int8_,\
+    (core_types, int8),\
+    core_types::int8_,\
     py::int_\
 )
 #define BTP_INT8_CONSTRUCTORS (BTP_INT8)(BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_FLOAT4)(BTP_FLOAT8)
@@ -227,8 +227,8 @@ T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& 
 
 #define BTP_FLOAT4 TYPE_DEFINITION(\
     BTP_FLOAT4,\
-    (base_types, float4),\
-    base_types::float4_,\
+    (core_types, float4),\
+    core_types::float4_,\
     py::float_\
 )
 #define BTP_FLOAT4_CONSTRUCTORS (BTP_FLOAT4)(BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_INT8)(BTP_FLOAT8)
@@ -236,8 +236,8 @@ T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& 
 
 #define BTP_FLOAT8 TYPE_DEFINITION(\
     BTP_FLOAT8,\
-    (base_types, float8),\
-    base_types::float8_,\
+    (core_types, float8),\
+    core_types::float8_,\
     py::float_\
 )
 #define BTP_FLOAT8_CONSTRUCTORS (BTP_FLOAT8)(BTP_INT1)(BTP_INT2)(BTP_INT4)(BTP_INT8)(BTP_FLOAT4)
@@ -245,8 +245,8 @@ T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& 
 
 #define BTP_TEXT TYPE_DEFINITION(\
     BTP_TEXT,\
-    (base_types, text),\
-    base_types::text_,\
+    (core_types, text),\
+    core_types::text_,\
     py::str\
 )
 #define BTP_TEXT_CONSTRUCTORS (BTP_TEXT)
@@ -254,8 +254,8 @@ T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& 
 
 #define BTP_TIMESTAMPTZ TYPE_DEFINITION(\
     BTP_TIMESTAMPTZ,\
-    (base_types, timestamptz),\
-    base_types::timestamptz_,\
+    (core_types, timestamptz),\
+    core_types::timestamptz_,\
     py::str\
 )
 #define BTP_TIMESTAMPTZ_CONSTRUCTORS (BTP_TIMESTAMPTZ)(BTP_TEXT)
@@ -263,8 +263,8 @@ T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& 
 
 #define BTP_DATE TYPE_DEFINITION(\
     BTP_DATE,\
-    (base_types, date),\
-    base_types::date_,\
+    (core_types, date),\
+    core_types::date_,\
     py::str\
 )
 #define BTP_DATE_CONSTRUCTORS (BTP_DATE)(BTP_TEXT)
@@ -272,9 +272,9 @@ T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& 
 
 // #define BTP_TIMETZ TYPE_DEFINITION(
 //     BTP_TIMETZ,
-//     (base_types, timetz_py),
+//     (core_types, timetz_py),
 //     py::str,
-//     base_types::text
+//     core_types::text
 // )
 // #define BTP_TIMETZ_CONSTRUCTORS (BTP_TIMETZ)
 

@@ -5,7 +5,7 @@ bin
 lib64
 ./include
 .cache
-base_types.egg-info
+core_types.egg-info
 dist
 commit.msg
 .commit.msg.swp

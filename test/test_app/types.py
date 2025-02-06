@@ -1,4 +1,4 @@
-import base_types as bt
+import core_types as bt
 import test_app.cpp.wrapper as ta
 
 

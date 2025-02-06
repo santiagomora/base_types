@@ -2,12 +2,12 @@
 # define BASE_TYPES_COMPARE_HPP
 
 
-#include "base_types/types.hpp"
+#include "core_types/types.hpp"
 #include "types.hpp"
 #include <type_traits>
 
 
-namespace base_types
+namespace core_types
 {
 
 template<

@@ -28,7 +28,7 @@ namespace ldt = boost::local_time;
 namespace dt = boost::gregorian;
 
 
-namespace base_types
+namespace core_types
 {
 
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(base_types)
+project(core_types)
 set(CMAKE_CXX_STANDARD 20)
 set(PYBIND11_PYTHON_VERSION 3.12)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -fPIC -O2 -march=native -flto=auto")

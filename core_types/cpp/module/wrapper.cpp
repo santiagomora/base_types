@@ -1,18 +1,18 @@
 #include <pybind11/pybind11.h>
 
 
-#include "base_types/types.hpp"
-#include "base_types/compare.hpp"
+#include "core_types/types.hpp"
+#include "core_types/compare.hpp"
 
-#include "base_types/macros/overload.hpp"
-#include "base_types/macros/register.hpp"
-#include "base_types/macros/definition.hpp"
+#include "core_types/macros/overload.hpp"
+#include "core_types/macros/register.hpp"
+#include "core_types/macros/definition.hpp"
 
 
 namespace py = pybind11;
 
 
-// clear && g++ -P -E -I/usr/include/boost -I./base_types/cpp -I./ -I../../../pg_definition/venv/lib/python3.12/site-packages/pybind11/include wrapper.cpp
+// clear && g++ -P -E -I/usr/include/boost -I./core_types/cpp -I./ -I../../../pg_definition/venv/lib/python3.12/site-packages/pybind11/include wrapper.cpp
 
 
 PYBIND11_MODULE(wrapper, m) {

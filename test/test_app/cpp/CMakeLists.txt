@@ -10,8 +10,8 @@ pybind11_add_module(${PROJECT_NAME}
     src/functions.cpp
     src/init.cpp
 )
-target_include_directories(${PROJECT_NAME} PRIVATE ../../../base_types/cpp/lib/include)
+target_include_directories(${PROJECT_NAME} PRIVATE ../../../core_types/cpp/lib/include)
 target_include_directories(${PROJECT_NAME} PRIVATE ./include)
 target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PYBIND11_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE /home/smora/sgs/dev/python/core/types/base_types/cpp/lib/build/libbase_types.so)
+target_link_libraries(${PROJECT_NAME} PRIVATE /home/smora/sgs/dev/python/core/types/core_types/cpp/lib/build/libcore_types.so)

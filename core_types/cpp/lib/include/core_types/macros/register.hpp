@@ -41,7 +41,7 @@
 
 
 #define PY_CLASSDEF_DECLARE_SUBCLASS_REG(CLASS_DEF)\
-    base_types::py_subclass_registry<BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))> T_QUALNAME(T_NAMETUPLE(CLASS_DEF))::subclass_registry= base_types::py_subclass_registry<BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))>()
+    core_types::py_subclass_registry<BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))> T_QUALNAME(T_NAMETUPLE(CLASS_DEF))::subclass_registry= core_types::py_subclass_registry<BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))>()
 
 
 #define PY_CLASSDEF_REGISTER(CLASS_DEF, m)\
@@ -111,7 +111,7 @@ BOOST_PP_SEQ_FOR_EACH(C_PY_CONSTRUCTOR, BOOST_PP_EMPTY(), T_CONSTRUCTORS(ALIAS_D
 #define TD_PY_PY_TYPE_CONSTRUCTOR(TYPE_DEF)\
     .def(py::init([](const T_PY_PRIMITIVE(TYPE_DEF)& other){\
         return std::unique_ptr<T_QUALNAME(T_NAMETUPLE(TYPE_DEF))>(\
-            new T_QUALNAME(T_NAMETUPLE(TYPE_DEF))(other.attr("__str__")().cast<base_types::text_>()));\
+            new T_QUALNAME(T_NAMETUPLE(TYPE_DEF))(other.attr("__str__")().cast<core_types::text_>()));\
     }))
 
 
@@ -134,14 +134,14 @@ BOOST_PP_SEQ_FOR_EACH(C_PY_CONSTRUCTOR, BOOST_PP_EMPTY(), T_CONSTRUCTORS(ALIAS_D
 
 
 #define PY_TYPEDEF_DECLARE_SUBCLASS_REG(TYPE_DEF)\
-    base_types::py_subclass_registry<T_QUALNAME(T_NAMETUPLE(TYPE_DEF))> T_QUALNAME(T_NAMETUPLE(TYPE_DEF))::subclass_registry = base_types::py_subclass_registry<T_QUALNAME(T_NAMETUPLE(TYPE_DEF))>()
+    core_types::py_subclass_registry<T_QUALNAME(T_NAMETUPLE(TYPE_DEF))> T_QUALNAME(T_NAMETUPLE(TYPE_DEF))::subclass_registry = core_types::py_subclass_registry<T_QUALNAME(T_NAMETUPLE(TYPE_DEF))>()
 
 
 #define PY_TYPEDEF_REGISTER(TYPE_DEF, m, VAR_NAME)\
 py::class_<T_QUALNAME(T_NAMETUPLE(TYPE_DEF)), std::unique_ptr<T_QUALNAME(T_NAMETUPLE(TYPE_DEF))>> VAR_NAME(m, BOOST_PP_STRINGIZE(T_NAME(T_NAMETUPLE(TYPE_DEF))));\
 VAR_NAME.def(py::pickle(\
     [](const T_QUALNAME(T_NAMETUPLE(TYPE_DEF))& a) { return py::make_tuple(a.value()); },\
-    [](py::tuple t) { return T_QUALNAME(T_NAMETUPLE(TYPE_DEF))(t[0].cast<base_types::text_>()); }\
+    [](py::tuple t) { return T_QUALNAME(T_NAMETUPLE(TYPE_DEF))(t[0].cast<core_types::text_>()); }\
 ))\
 TD_PY_TYPE_CONSTRUCTORS(TYPE_DEF, T_CONSTRUCTORS(TYPE_DEF))\
 .def("__str__", &T_QUALNAME(T_NAMETUPLE(TYPE_DEF))::to_string)\
@@ -156,7 +156,7 @@ TD_PY_TYPE_CONSTRUCTORS(TYPE_DEF, T_CONSTRUCTORS(TYPE_DEF))\
     return BOOST_PP_STRINGIZE(T_NAMESPACE(T_NAMETUPLE(TYPE_DEF)).T_NAME(T_NAMETUPLE(TYPE_DEF)));\
 })\
 .def("compare", [](const T_QUALNAME(T_NAMETUPLE(TYPE_DEF))& t, const T_PY_PRIMITIVE(TYPE_DEF)& other) {\
-    T_QUALNAME(T_NAMETUPLE(TYPE_DEF)) v(other.attr("__str__")().cast<base_types::text_>());\
+    T_QUALNAME(T_NAMETUPLE(TYPE_DEF)) v(other.attr("__str__")().cast<core_types::text_>());\
     return t.compare<T_BASE_PRIMITIVE(TYPE_DEF)>(v);\
 })\
 BOOST_PP_SEQ_FOR_EACH(TD_DECLARE_COMPARE, TYPE_DEF, T_CONSTRUCTORS(TYPE_DEF))
@@ -184,7 +184,7 @@ TD_PY_TYPE_CONSTRUCTORS(ALIAS_DEF, T_CONSTRUCTORS(ALIAS_DEF))\
     return py::type::of<T_QUALNAME(T_NAMETUPLE(T_ALIAS_BASE(ALIAS_DEF)))>();\
 })\
 .def("compare", [](const T_QUALNAME(T_NAMETUPLE(ALIAS_DEF))& t, const T_PY_PRIMITIVE(ALIAS_DEF)& other) {\
-    T_QUALNAME(T_NAMETUPLE(ALIAS_DEF)) v(other.attr("__str__")().cast<base_types::text_>());\
+    T_QUALNAME(T_NAMETUPLE(ALIAS_DEF)) v(other.attr("__str__")().cast<core_types::text_>());\
     return t.compare<T_BASE_PRIMITIVE(ALIAS_DEF)>(v);\
 })\
 BOOST_PP_SEQ_FOR_EACH(TD_DECLARE_COMPARE, ALIAS_DEF, CONSTRUCTORS)
@@ -198,7 +198,7 @@ BOOST_PP_SEQ_FOR_EACH(TD_DECLARE_COMPARE, ALIAS_DEF, CONSTRUCTORS)
 
 
 #define PY_ENUMDEF_DECLARE_SUBCLASS_REG(ENUM_DEF)\
-    base_types::py_subclass_registry<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))> T_QUALNAME(T_NAMETUPLE(ENUM_DEF))::subclass_registry = base_types::py_subclass_registry<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))>()
+    core_types::py_subclass_registry<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))> T_QUALNAME(T_NAMETUPLE(ENUM_DEF))::subclass_registry = core_types::py_subclass_registry<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))>()
 
 
 #define PY_ENUMDEF_REGISTER(ENUM_DEF, m)\
@@ -227,7 +227,7 @@ BOOST_PP_SEQ_FOR_EACH(ED_PY_COPY_CONSTRUCTOR, BOOST_PP_EMPTY(), T_CONSTRUCTORS(E
 
 
 #define PY_ALIASDEF_DECLARE_SUBCLASS_REG(ALIAS_DEF)\
-    base_types::py_subclass_registry<BOOST_PP_IF(\
+    core_types::py_subclass_registry<BOOST_PP_IF(\
         BOOST_PP_IS_EMPTY(T_PY_PRIMITIVE(ALIAS_DEF)),\
         BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(T_ALIAS_ORIGIN(ALIAS_DEF))),\
         T_QUALNAME(T_NAMETUPLE(T_ALIAS_ORIGIN(ALIAS_DEF)))\

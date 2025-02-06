@@ -1,5 +1,5 @@
 import sys
-import base_types as bt
+import core_types as bt
 from datetime import datetime, timezone
 from dataclasses import dataclass
 sys.path.append('.')
