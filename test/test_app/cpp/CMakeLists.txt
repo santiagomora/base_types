@@ -14,4 +14,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE ../../../core_types/cpp/lib/i
 target_include_directories(${PROJECT_NAME} PRIVATE ./include)
 target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PYBIND11_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE /home/smora/sgs/dev/python/core/types/core_types/cpp/lib/build/libcore_types.so)
+target_link_libraries(${PROJECT_NAME} PRIVATE /home/smora/sgs/dev/python/core/core_types/core_types/cpp/lib/build/libcore_types.so)
