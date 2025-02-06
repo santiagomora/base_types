@@ -119,7 +119,6 @@ class builtin(type(pybind_base)):
                 # '__repr__': __repr__,
                 '__init__': __init__
             })
-        print(rettype)
         rettype.set_py_cls(rettype.qualified_name, rettype)
         return rettype
 

@@ -45,7 +45,6 @@ class _CompoundPydanticAdapt:
         for ix in range(0, len(self._tp._cpp_field_names)):
             field_name: str = self._tp._cpp_field_names[ix]
             field_type: str = self._tp._cpp_field_types[ix]
-            print(field_type, field_type.qualified_name)
             members[field_name] = (field_type.get_py_cls(field_type.qualified_name), Undefined, )
         model: BaseModel = create_model(
             f'{self._tp.__name__}_Model', **members
@@ -53,6 +52,7 @@ class _CompoundPydanticAdapt:
         for base in self._tp._cpp_bases:
             for name, info in base.get_py_cls(base.qualified_name).model_fields.items():
                 model.model_fields[name].metadata += info.metadata
+                print(base, name, info)
                 if hasattr(info, 'default_factory'):
                     model.model_fields[name].default_factory = info.default_factory
         model.model_rebuild(force=True)
