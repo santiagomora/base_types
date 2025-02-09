@@ -1,10 +1,7 @@
-# ifndef BASE_TYPES_COMPARE_HPP
-# define BASE_TYPES_COMPARE_HPP
-
-
-#include "core_types/types.hpp"
-#include "types.hpp"
+# ifndef BASE_TYPES_TYPING_COMPARE
+# define BASE_TYPES_TYPING_COMPARE
 #include <type_traits>
+#include "core_types/typing/types.hpp"
 
 
 namespace core_types

@@ -1,17 +1,13 @@
-# ifndef BASE_TYPES_TYPES_HPP
-# define BASE_TYPES_TYPES_HPP
-
-
+# ifndef BASE_TYPES_TYPING_TYPES
+# define BASE_TYPES_TYPING_TYPES
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
 #include <limits>
 #include <map>
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-
 #include <boost/date_time/gregorian/greg_date.hpp>
 #include <boost/date_time/gregorian/parsers.hpp>
 #include <boost/date_time/local_time/local_date_time.hpp>

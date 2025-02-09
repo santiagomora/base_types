@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 
 #include "core_types/macros/register.hpp"
-#include "core_types/compare.hpp"
+#include "core_types/typing/compare.hpp"
 
 #include "test_app/types.hpp"
 #include "test_app/definition.hpp"

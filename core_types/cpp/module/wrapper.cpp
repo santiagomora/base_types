@@ -1,8 +1,8 @@
 #include <pybind11/pybind11.h>
 
 
-#include "core_types/types.hpp"
-#include "core_types/compare.hpp"
+#include "core_types/typing/types.hpp"
+#include "core_types/typing/compare.hpp"
 
 #include "core_types/macros/overload.hpp"
 #include "core_types/macros/register.hpp"
