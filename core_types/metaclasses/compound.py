@@ -42,6 +42,8 @@ class _CompoundPydanticAdapt:
         for base in self._tp._cpp_bases:
             for name, info in base.get_py_cls(base.qualified_name).model_fields.items():
                 members[name] = (info.annotation, info.default, )
+        # //for field_name, field_type in self._tp._cpp_fields.items():
+        # //    members[field_name] = (field_type, Undefined, )
         for ix in range(0, len(self._tp._cpp_field_names)):
             field_name: str = self._tp._cpp_field_names[ix]
             field_type: str = self._tp._cpp_field_types[ix]
@@ -52,7 +54,6 @@ class _CompoundPydanticAdapt:
         for base in self._tp._cpp_bases:
             for name, info in base.get_py_cls(base.qualified_name).model_fields.items():
                 model.model_fields[name].metadata += info.metadata
-                print(base, name, info)
                 if hasattr(info, 'default_factory'):
                     model.model_fields[name].default_factory = info.default_factory
         model.model_rebuild(force=True)
@@ -122,11 +123,13 @@ class compound(type(pybind_base)):
         def __init__(self, *args: Any, **data: dict[str, Any]) -> None:
             if len(args) > 0 and len(data) > 0:
                 raise ValueError(f'Can instance {self.__class__.__name__} with position parameters or named parameters, not both.')
+            #data = _tuple_to_dict(args, tuple(self.__class__._cpp_fields.keys()))
             if len(args) > 0:
                 data = _tuple_to_dict(args, self.__class__._cpp_field_names)
             data = self.__class__._pydantic_adapt.model.__pydantic_validator__.validate_python(
                 data, self_instance=self
             )
+            # self, *tuple([getattr(data, name) for name in self.__class__._cpp_fields])
             clsbases[0].__init__(
                 self, *tuple([getattr(data, name) for name in self.__class__._cpp_field_names])
             )

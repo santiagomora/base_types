@@ -12,68 +12,69 @@
 #include "core_types/macros/base.hpp"
 
 
-#define CL_INHERIT_BASES(r, data, elem)\
-    (public T_QUALNAME(T_NAMETUPLE(elem)))
+// NOTE METHODS
+#define CL_INHERIT_BASE(r, data, elem)\
+(public T_QUALNAME(T_NAMETUPLE(elem)))
 
 
 #define CL_MEMBER_NAME(r, data, i, elem)\
-    BOOST_PP_COMMA_IF(i) CM_NAME(elem)
+BOOST_PP_COMMA_IF(i) CM_NAME(elem)
 
 
 #define CL_ACCESS_MEMBER(r, data, i, elem)\
-    BOOST_PP_COMMA_IF(i) data.CM_NAME(elem)
+BOOST_PP_COMMA_IF(i) data.CM_NAME(elem)
 
 
 #define CL_MEMBER_TYPE(r, data, i, elem)\
-    BOOST_PP_COMMA_IF(i) CM_QUALIFIED_TYPE(elem)
+BOOST_PP_COMMA_IF(i) T_QUALNAME(T_NAMETUPLE(CM_TYPE(elem)))
 
 
 #define CL_MEMBER_DECLARATION(r, data, elem)\
-    CM_QUALIFIED_TYPE(elem) CM_NAME(elem) data
+T_QUALNAME(T_NAMETUPLE(CM_TYPE(elem))) CM_NAME(elem) data
 
 
 #define CL_INITIALIZE_BASE(r, data, elem)\
-    T_NAME(T_NAMETUPLE(elem))(BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(elem))) ,
+T_NAME(T_NAMETUPLE(elem))(BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(elem))) ,
 
 
 #define CL_INITIALIZE_EMPTY_BASE(r, data, i, elem)\
-    BOOST_PP_COMMA_IF(i) T_NAME(T_NAMETUPLE(elem))()
+BOOST_PP_COMMA_IF(i) T_NAME(T_NAMETUPLE(elem))()
 
 
 #define CL_INITIALIZE_BASE_COPY(r, data, elem)\
-    T_NAME(T_NAMETUPLE(elem))(data) ,
+T_NAME(T_NAMETUPLE(elem))(data) ,
 
 
 #define CM_INITIALIZE(r, data, elem)\
-    CM_NAME(elem)(BOOST_PP_IF(BOOST_PP_IS_EMPTY(data), CM_NAME(elem), data.CM_NAME(elem)))
+CM_NAME(elem)(BOOST_PP_IF(BOOST_PP_IS_EMPTY(data), CM_NAME(elem), data.CM_NAME(elem)))
 
 
 #define CM_COPY(r, data, elem)\
-    CM_NAME(elem) = data.CM_NAME(elem);
+CM_NAME(elem) = data.CM_NAME(elem);
 
 
 #define CM_STREAM_TO_STRING(r, data, i, elem)\
-    BOOST_PP_IF(i, << ", " <<, BOOST_PP_EMPTY())\
-    BOOST_PP_IF(CM_IS_OPTIONAL(elem), ((CM_NAME(elem).has_value()) ? CM_NAME(elem).value().to_string() : "NULL"), CM_NAME(elem).to_string())
+BOOST_PP_IF(i, << ", " <<, BOOST_PP_EMPTY())\
+BOOST_PP_IF(CM_IS_OPTIONAL(elem), ((CM_NAME(elem).has_value()) ? CM_NAME(elem).value().to_string() : "NULL"), CM_NAME(elem).to_string())
 
 
 #define CPP_CLASSDEF_DECLARATION(CLASS_DEF)\
 class T_NAME(T_NAMETUPLE(CLASS_DEF))\
     BOOST_PP_TUPLE_ENUM(BOOST_PP_IF(\
-        BOOST_PP_IS_EMPTY(T_BASES(CLASS_DEF)),\
+        BOOST_PP_IS_EMPTY(T_BASE(CLASS_DEF)),\
         (BOOST_PP_EMPTY()),\
-        (: BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_FOR_EACH(CL_INHERIT_BASES, BOOST_PP_EMPTY(), T_BASES(CLASS_DEF)))))\
+        (: BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_FOR_EACH(CL_INHERIT_BASE, BOOST_PP_EMPTY(), T_BASE(CLASS_DEF)))))\
     )\
 {\
 public:\
     static core_types::py_subclass_registry<BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))> subclass_registry;\
-    BOOST_PP_SEQ_FOR_EACH(CL_MEMBER_DECLARATION, ;, T_DIRECT_MEMBERS(CLASS_DEF))\
+    BOOST_PP_SEQ_FOR_EACH(CL_MEMBER_DECLARATION, ;, T_MEMBERS(CLASS_DEF))\
 \
     T_NAME(T_NAMETUPLE(CLASS_DEF))()\
     BOOST_PP_TUPLE_ENUM(BOOST_PP_IF(\
-        BOOST_PP_IS_EMPTY(T_BASES(CLASS_DEF)),\
+        BOOST_PP_IS_EMPTY(T_BASE(CLASS_DEF)),\
         (BOOST_PP_EMPTY()),\
-        (: BOOST_PP_SEQ_FOR_EACH_I(CL_INITIALIZE_EMPTY_BASE, BOOST_PP_EMPTY(), T_BASES(CLASS_DEF)))\
+        (: BOOST_PP_SEQ_FOR_EACH_I(CL_INITIALIZE_EMPTY_BASE, BOOST_PP_EMPTY(), T_BASE(CLASS_DEF)))\
     ))\
     {}\
 \
@@ -82,23 +83,23 @@ public:\
             BOOST_PP_SEQ_TRANSFORM(CL_MEMBER_DECLARATION, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)))\
     ) : \
     BOOST_PP_TUPLE_ENUM(BOOST_PP_IF(\
-        BOOST_PP_IS_EMPTY(T_BASES(CLASS_DEF)),\
+        BOOST_PP_IS_EMPTY(T_BASE(CLASS_DEF)),\
         (BOOST_PP_EMPTY()),\
-        (BOOST_PP_SEQ_FOR_EACH(CL_INITIALIZE_BASE, BOOST_PP_EMPTY(), T_BASES(CLASS_DEF)))\
+        (BOOST_PP_SEQ_FOR_EACH(CL_INITIALIZE_BASE, BOOST_PP_EMPTY(), T_BASE(CLASS_DEF)))\
     ))\
 \
     BOOST_PP_SEQ_ENUM(\
-        BOOST_PP_SEQ_TRANSFORM(CM_INITIALIZE, BOOST_PP_EMPTY(), T_DIRECT_MEMBERS(CLASS_DEF)))\
+        BOOST_PP_SEQ_TRANSFORM(CM_INITIALIZE, BOOST_PP_EMPTY(), T_MEMBERS(CLASS_DEF)))\
     {}\
     T_NAME(T_NAMETUPLE(CLASS_DEF)) (const T_NAME(T_NAMETUPLE(CLASS_DEF))& other)\
     : \
     BOOST_PP_TUPLE_ENUM(BOOST_PP_IF(\
-        BOOST_PP_IS_EMPTY(T_BASES(CLASS_DEF)),\
+        BOOST_PP_IS_EMPTY(T_BASE(CLASS_DEF)),\
         (BOOST_PP_EMPTY()),\
-        (BOOST_PP_SEQ_FOR_EACH(CL_INITIALIZE_BASE_COPY, other, T_BASES(CLASS_DEF)))\
+        (BOOST_PP_SEQ_FOR_EACH(CL_INITIALIZE_BASE_COPY, other, T_BASE(CLASS_DEF)))\
     ))\
     BOOST_PP_SEQ_ENUM(\
-        BOOST_PP_SEQ_TRANSFORM(CM_INITIALIZE, other, T_DIRECT_MEMBERS(CLASS_DEF)))\
+        BOOST_PP_SEQ_TRANSFORM(CM_INITIALIZE, other, T_MEMBERS(CLASS_DEF)))\
     {}\
     T_NAME(T_NAMETUPLE(CLASS_DEF))& operator=(const T_NAME(T_NAMETUPLE(CLASS_DEF))& other) {\
         BOOST_PP_SEQ_FOR_EACH(CM_COPY, other, C_ALL_MEMBERS(CLASS_DEF))\
@@ -116,18 +117,18 @@ public:\
 
 
 #define ED_TO_STRING_CASE(r, data, elem)\
-    case data::elem:\
-        return BOOST_PP_STRINGIZE(elem);
+case data::elem:\
+    return BOOST_PP_STRINGIZE(elem);
 
 
 #define ED_FROM_STRING_CASE(r, data, i, elem)\
-    BOOST_PP_IF(\
-        i,\
-        else if (BOOST_PP_STRINGIZE(elem) == BOOST_PP_TUPLE_ELEM(1, data))\
-            return BOOST_PP_TUPLE_ELEM(0, data)::elem;,\
-        if (BOOST_PP_STRINGIZE(elem) == BOOST_PP_TUPLE_ELEM(1, data))\
-            return BOOST_PP_TUPLE_ELEM(0, data)::elem;\
-    )
+BOOST_PP_IF(\
+    i,\
+    else if (BOOST_PP_STRINGIZE(elem) == BOOST_PP_TUPLE_ELEM(1, data))\
+        return BOOST_PP_TUPLE_ELEM(0, data)::elem;,\
+    if (BOOST_PP_STRINGIZE(elem) == BOOST_PP_TUPLE_ELEM(1, data))\
+        return BOOST_PP_TUPLE_ELEM(0, data)::elem;\
+)
 
 
 #define CPP_ENUMDEF_DECLARATION(ENUM_DEF)\
@@ -160,21 +161,21 @@ public:\
 
 
 #define CPP_ALIASDEF_DECLARATION(ALIAS_DEF)\
-class T_NAME(T_NAMETUPLE(ALIAS_DEF)) : public T_QUALNAME(T_NAMETUPLE(T_ALIAS_BASE(ALIAS_DEF))) {\
+class T_NAME(T_NAMETUPLE(ALIAS_DEF)) : public T_QUALNAME(T_NAMETUPLE(T_BASE(ALIAS_DEF))) {\
 public:\
 static core_types::py_subclass_registry<BOOST_PP_IF(\
     BOOST_PP_IS_EMPTY(T_BASE_PRIMITIVE(ALIAS_DEF)),\
-    BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(T_ALIAS_BASE(ALIAS_DEF))),\
+    BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(T_BASE(ALIAS_DEF))),\
     T_QUALNAME(T_NAMETUPLE(T_ALIAS_ORIGIN(ALIAS_DEF)))\
 )>& subclass_registry;\
-using T_QUALNAME(T_NAMETUPLE(T_ALIAS_BASE(ALIAS_DEF)))::T_NAME(T_NAMETUPLE(T_ALIAS_BASE(ALIAS_DEF)));\
+using T_QUALNAME(T_NAMETUPLE(T_BASE(ALIAS_DEF)))::T_NAME(T_NAMETUPLE(T_BASE(ALIAS_DEF)));\
 \
-T_NAME(T_NAMETUPLE(ALIAS_DEF))(const T_QUALNAME(T_NAMETUPLE(T_ALIAS_BASE(ALIAS_DEF)))& other) : T_QUALNAME(T_NAMETUPLE(T_ALIAS_BASE(ALIAS_DEF)))(other) {}\
+T_NAME(T_NAMETUPLE(ALIAS_DEF))(const T_QUALNAME(T_NAMETUPLE(T_BASE(ALIAS_DEF)))& other) : T_QUALNAME(T_NAMETUPLE(T_BASE(ALIAS_DEF)))(other) {}\
 \
-T_NAME(T_NAMETUPLE(ALIAS_DEF))(const T_QUALNAME(T_NAMETUPLE(ALIAS_DEF))& other) : T_QUALNAME(T_NAMETUPLE(T_ALIAS_BASE(ALIAS_DEF)))(other) {}\
+T_NAME(T_NAMETUPLE(ALIAS_DEF))(const T_QUALNAME(T_NAMETUPLE(ALIAS_DEF))& other) : T_QUALNAME(T_NAMETUPLE(T_BASE(ALIAS_DEF)))(other) {}\
 \
 T_NAME(T_NAMETUPLE(ALIAS_DEF))& operator=(const T_NAME(T_NAMETUPLE(ALIAS_DEF))& other) {\
-    T_QUALNAME(T_NAMETUPLE(T_ALIAS_BASE(ALIAS_DEF)))::operator=(other);\
+    T_QUALNAME(T_NAMETUPLE(T_BASE(ALIAS_DEF)))::operator=(other);\
     return *this;\
 }\
 }
