@@ -1,5 +1,5 @@
-# ifndef BASE_TYPES_TYPING_COMPARE
-# define BASE_TYPES_TYPING_COMPARE
+# ifndef CORE_TYPES_TYPING_COMPARE
+# define CORE_TYPES_TYPING_COMPARE
 #include <type_traits>
 #include "core_types/typing/types.hpp"
 

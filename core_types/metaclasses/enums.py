@@ -1,7 +1,7 @@
 from typing import\
     Any,\
     Optional
-from core_types.cpp.module.wrapper import pybind_base
+from core_types.cpp.module.wrapper import ct_pybind_base
 from pydantic_core import\
     core_schema
 from pydantic import\
@@ -44,7 +44,7 @@ class _EnumPydanticAdapt:
         return value if isinstance(value, self._tp) else self._tp(value)
 
 
-class enum(type(pybind_base)):
+class enum(type(ct_pybind_base)):
     class set_default:
         def __init__(
             self, value: literal

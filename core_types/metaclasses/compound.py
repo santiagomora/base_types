@@ -2,7 +2,7 @@ from typing import\
     Any
 from pydantic.fields import\
     FieldInfo
-from core_types.cpp.module.wrapper import pybind_base
+from core_types.cpp.module.wrapper import ct_pybind_base
 import functools
 from pydantic import\
     create_model,\
@@ -46,8 +46,15 @@ class _CompoundPydanticAdapt:
         # //    members[field_name] = (field_type, Undefined, )
         for ix in range(0, len(self._tp._cpp_field_names)):
             field_name: str = self._tp._cpp_field_names[ix]
-            field_type: str = self._tp._cpp_field_types[ix]
-            members[field_name] = (field_type.get_py_cls(field_type.qualified_name), Undefined, )
+            field_type, container_name = self._tp._cpp_field_types[ix]
+            tp: type = field_type.get_py_cls(field_type.qualified_name)
+            if container_name == 'vector':
+                tp, default = list[tp], Undefined
+            elif container_name == 'optional':
+                tp, default = tp, None
+            else:
+                tp, default = tp, Undefined
+            members[field_name] = (tp, default, )
         model: BaseModel = create_model(
             f'{self._tp.__name__}_Model', **members
         )
@@ -69,7 +76,7 @@ class _CompoundPydanticAdapt:
         return self._tp(**value)
 
 
-class compound(type(pybind_base)):
+class compound(type(ct_pybind_base)):
     class set_default:
         def __init__(
             self, *, value: Operand, field: str

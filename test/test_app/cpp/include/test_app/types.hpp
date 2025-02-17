@@ -1,13 +1,11 @@
 #ifndef TEST_APP_TYPES
 #define TEST_APP_TYPES
-
-
-#include "core_types/macros/definition.hpp"
+#include "core_types/macros/declaration.hpp"
 #include "core_types/typing/types.hpp"
 #include "test_app/definition.hpp"
 
 
-// DEBUG clear && g++ -P -E -I/usr/include/boost -I../../../../../core_types/cpp -I./ types.hpp
+// DEBUG clear && g++ -P -E -I/usr/include/boost -I/home/smora/sgs/dev/python/core/include/ -I/home/smora/.pyenv/versions/3.12.0/include/python3.12/ -I./include types.hpp
 
 namespace test_app {
 

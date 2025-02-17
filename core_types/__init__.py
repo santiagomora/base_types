@@ -20,3 +20,4 @@ from .constraint import\
 from .metaclasses.enums import enum
 from .metaclasses.builtin import builtin, Undefined
 from .metaclasses.compound import compound
+from .cpp.module.wrapper import ct_pybind_base

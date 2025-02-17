@@ -1,5 +1,7 @@
 #include <pybind11/pybind11.h>
-#include "core_types/macros/register.hpp"
+#include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
+#include "core_types/macros/register/instanceable.hpp"
 #include "core_types/typing/compare.hpp"
 #include "core_types/typing/types.hpp"
 #include "test_app/types.hpp"
@@ -14,17 +16,17 @@ namespace py = pybind11;
 
 PYBIND11_MODULE (wrapper, m) 
 {
-    PY_CLASSDEF_REGISTER(TEST_APP_AUTHOR, m);
-    PY_CLASSDEF_REGISTER(TEST_APP_AUTHORED, m);
-    PY_CLASSDEF_REGISTER(TEST_APP_WITH_TIMESTAMPS, m);
-    PY_ENUMDEF_REGISTER(TEST_APP_POST_STATUS, m);
-    PY_CLASSDEF_REGISTER(TEST_APP_POST, m);
-    PY_CLASSDEF_REGISTER(TEST_APP_COMMENT, m);
-    PY_CLASSDEF_REGISTER(TEST_APP_COMMENT_POST, m);
-    PY_REGISTER_TYPE_ALIASDEF(TEST_APP_DOMAIN, m, dm, TEST_APP_DOMAIN_CONSTRUCTORS);
-    
-    m.def("test_function_receives_author_correctly", &test_app::test_function_receives_author_correctly);
-    m.def("test_function_receives_comment_post_correctly", &test_app::test_function_receives_comment_post_correctly);
-    m.def("test_function_receives_wt_subclass_correctly", &test_app::test_function_receives_wt_subclass_correctly);
+CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_AUTHOR, m);
+CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_AUTHORED, m);
+CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_WITH_TIMESTAMPS, m);
+CT_ENUMDEF_REGISTER_INSTANCEABLE(TEST_APP_POST_STATUS, m);
+CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_POST, m);
+CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_COMMENT, m);
+CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_COMMENT_POST, m);
+CT_TYPE_ALIASDEF_REGISTER_INSTANCEABLE(TEST_APP_DOMAIN, m, TEST_APP_DOMAIN_CONSTRUCTORS);
+
+m.def("test_function_receives_author_correctly", &test_app::test_function_receives_author_correctly);
+m.def("test_function_receives_comment_post_correctly", &test_app::test_function_receives_comment_post_correctly);
+m.def("test_function_receives_wt_subclass_correctly", &test_app::test_function_receives_wt_subclass_correctly);
 }
 

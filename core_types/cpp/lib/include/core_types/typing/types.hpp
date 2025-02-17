@@ -1,5 +1,5 @@
-# ifndef BASE_TYPES_TYPING_TYPES
-# define BASE_TYPES_TYPING_TYPES
+# ifndef CORE_TYPES_TYPING_TYPES
+# define CORE_TYPES_TYPING_TYPES
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -16,6 +16,9 @@
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <type_traits>
+#include <optional>
+#include "core_types/typing/definitions.hpp"
 
 
 namespace py = pybind11;
@@ -72,6 +75,32 @@ public:
 
 
 template <typename T>
+struct is_optional : std::false_type
+{};
+template <typename T>
+struct is_optional<std::optional<T>> : std::true_type
+{};
+
+
+template <typename T>
+struct is_vector : std::false_type
+{};
+template <typename T>
+struct is_vector<std::vector<T>> : std::true_type
+{};
+
+
+
+template <typename T>
+struct py_determine_container
+{
+    static constexpr std::string_view value =
+        is_vector<T>::value ? "vector" :
+        is_optional<T>::value ? "optional": "none";
+};
+
+
+template <typename T>
 class wrapper
 {
 protected:
@@ -94,6 +123,9 @@ public:
     template<typename V>
     int compare (const wrapper<V>& other) const {
         return compare_<T, V>(*this, other);
+    }
+    const T& operator*() const {
+        return value();
     }
 };
 
@@ -295,17 +327,22 @@ public:
         ldt::time_zone_ptr zone(new ldt::posix_time_zone("UTC"));
         return timestamptz_(pt::from_iso_extended_string(value.replace(10, 1, "T")), zone);
     }
-    std::string to_string() const {
+    std::string to_string_(const std::string& format) const {
         std::ostringstream oss;
-        ldt::local_time_facet *facet = new ldt::local_time_facet("%Y-%m-%dT%H:%M:%S.%f%Q");
+        ldt::local_time_facet *facet = new ldt::local_time_facet(format.c_str());
         oss.imbue(std::locale(std::locale::classic(), facet));
         oss << value();
         delete facet;
         return oss.str(); //to_iso_extended_string(value().utc_time());// + value().zone()->to_posix_string();
     }
+    std::string to_string() const {
+        return to_string_("%Y-%m-%dT%H:%M:%S.%f%Q");
+    }
     py::object to_py(std::string subclass_name) const {
         return timestamptz::subclass_registry.to_py(subclass_name, *this);
     }
+    static std::shared_ptr<timestamptz> utcnow();
+    static std::shared_ptr<timestamptz> now(const ldt::time_zone_ptr&);
 };
 
 
