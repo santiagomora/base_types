@@ -92,7 +92,7 @@ struct is_vector<std::vector<T>> : std::true_type
 
 
 template <typename T>
-struct py_determine_container
+struct determine_container_name
 {
     static constexpr std::string_view value =
         is_vector<T>::value ? "vector" :

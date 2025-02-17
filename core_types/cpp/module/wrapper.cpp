@@ -23,6 +23,6 @@ PYBIND11_MODULE(wrapper, m) {
     CT_TYPEDEF_REGISTER_INSTANCEABLE(CT_TIMESTAMPTZ, m);
     CT_TYPEDEF_REGISTER_INSTANCEABLE(CT_DATE, m);
     CT_TYPEDEF_REGISTER_INSTANCEABLE(CT_TEXT, m);
-    // std::cout << core_types::py_determine_container<std::vector<int>>::value << std::endl;
+    // std::cout << core_types::determine_container_name<std::vector<int>>::value << std::endl;
 }
 
