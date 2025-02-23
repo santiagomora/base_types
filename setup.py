@@ -173,7 +173,7 @@ class InstallCMakeLibs(install_lib):
         # distribution.data_files seems to ensure that setuptools' record 
         # writer appends them to installed-files.txt in the package's egg-info
         # shutil.rmtree(build_dir, ignore_errors=True)
-        print(f"[INSTALL_LIBS] \"{ext.name}\": Registering install files", file=sys.stdout)
+        print(f"[INSTALL_LIBS] \"{self.distribution.extension.name}\": Registering install files", file=sys.stdout)
         self.distribution.data_files = install_files + HEADERS
         # Must be forced to run after adding the libs to data_files
         self.distribution.run_command("install_data")
@@ -197,7 +197,6 @@ class InstallCMakeLibsData(install_data):
         extension = self.distribution.extension
         print(f"[INSTALL_DATA] \"{extension.name}\": Registering outfiles", file=sys.stdout)
         self.outfiles += self.distribution.data_files
-        print(os.path.exists)
 
 # 
 # class InstallCMakeScripts(install_scripts):

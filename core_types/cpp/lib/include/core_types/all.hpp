@@ -7,7 +7,6 @@
 #include "core_types/macros/declaration.hpp"
 #include "core_types/typing/compare.hpp"
 #include "core_types/typing/definitions.hpp"
-#include "core_types/typing/string.hpp"
 #include "core_types/typing/types.hpp"
 
 

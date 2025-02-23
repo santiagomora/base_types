@@ -1,13 +1,28 @@
 #ifndef TEST_APP_DEFINITIONS
 #define TEST_APP_DEFINITIONS
-#include "core_types/macros/declaration.hpp"
+#include "core_types/typing/definitions.hpp"
+#include "core_types/typing/backend.hpp"
 
 
+#define IFACE_DATACLASS_DEFINITION(NAME, BACKEND_TYPE, CLS)(\
+    NAME,\
+    CLS,\
+    T_NAMETUPLE(BACKEND_TYPE),\
+    BOOST_PP_EMPTY(),\
+    BOOST_PP_SEQ_FOR_EACH(CONVERT_DATACLASS_MEMBERS, BOOST_PP_EMPTY(), C_ALL_MEMBERS(BACKEND_TYPE)),\
+    BOOST_PP_SEQ_FOR_EACH(CONVERT_TO_IFACE_TYPE, BOOST_PP_EMPTY(), T_BASE(BACKEND_TYPE)),\
+    CT_CLASSDEF_IDENTIFIER\
+)
+
+
+// NOTE BACKEND DEFINITIONS
 #define TEST_APP_AUTHOR DATACLASS_DEFINITION(\
     TEST_APP_AUTHOR,\
     (test_app, author),\
     (DATACLASS_MEMBER(STD_OPTIONAL(CT_INT8), id))\
-    (DATACLASS_MEMBER(CT_TEXT, name))\
+    (DATACLASS_MEMBER(CT_TEXT, name)),\
+    NONE,\
+    (test_app::interface, author)\
 )
 #define TEST_APP_AUTHOR_MEMBERS T_MEMBERS(TEST_APP_AUTHOR)
 #define TEST_APP_AUTHOR_CONSTRUCTORS (TEST_APP_AUTHOR)
@@ -17,7 +32,9 @@
     TEST_APP_AUTHORED,\
     (test_app, authored),\
     (DATACLASS_MEMBER(CT_INT8, author_id))\
-    (DATACLASS_MEMBER(CT_TEXT, content))\
+    (DATACLASS_MEMBER(CT_TEXT, content)),\
+    NONE,\
+    (test_app::interface, authored)\
 )
 #define TEST_APP_AUTHORED_MEMBERS T_MEMBERS(TEST_APP_AUTHORED)
 #define TEST_APP_AUTHORED_CONSTRUCTORS (TEST_APP_AUTHORED)
@@ -27,7 +44,9 @@
     TEST_APP_WITH_TIMESTAMPS,\
     (test_app, with_timestamps),\
     (DATACLASS_MEMBER(STD_OPTIONAL(CT_TIMESTAMPTZ), created_at))\
-    (DATACLASS_MEMBER(CT_TIMESTAMPTZ, updated_at))\
+    (DATACLASS_MEMBER(CT_TIMESTAMPTZ, updated_at)),\
+    NONE,\
+    (test_app::interface, with_timestamps)\
 )
 #define TEST_APP_WITH_TIMESTAMPS_MEMBERS T_MEMBERS(TEST_APP_WITH_TIMESTAMPS)
 #define TEST_APP_WITH_TIMESTAMPS_CONSTRUCTORS (TEST_APP_WITH_TIMESTAMPS)
@@ -38,18 +57,20 @@
     (test_app, post_status),\
     (ENUM_MEMBER(published))\
     (ENUM_MEMBER(waiting_approval))\
-    (ENUM_MEMBER(draft))\
+    (ENUM_MEMBER(draft)),\
+    (test_app::interface, post_status)\
 )
 #define TEST_APP_POST_STATUS_CONSTRUCTORS (TEST_APP_POST_STATUS)
 
 
-#define TEST_APP_POST COMPOSED_DATACLASS_DEFINITION(\
+#define TEST_APP_POST DATACLASS_DEFINITION(\
     TEST_APP_POST,\
     (test_app, post),\
     (DATACLASS_MEMBER(CT_INT8, id))\
     (DATACLASS_MEMBER(CT_TEXT, title))\
     (DATACLASS_MEMBER(TEST_APP_POST_STATUS, status)),\
-    (TEST_APP_AUTHORED)(TEST_APP_WITH_TIMESTAMPS)\
+    (TEST_APP_AUTHORED)(TEST_APP_WITH_TIMESTAMPS),\
+    (test_app::interface, post)\
 )
 #define TEST_APP_POST_MEMBERS T_MEMBERS(TEST_APP_POST)\
     TEST_APP_AUTHORED_MEMBERS\
@@ -57,12 +78,13 @@
 #define TEST_APP_POST_CONSTRUCTORS (TEST_APP_POST)
 
 
-#define TEST_APP_COMMENT COMPOSED_DATACLASS_DEFINITION(\
+#define TEST_APP_COMMENT DATACLASS_DEFINITION(\
     TEST_APP_COMMENT,\
     (test_app, comment),\
     (DATACLASS_MEMBER(CT_INT8, id))\
     (DATACLASS_MEMBER(CT_INT8, post_id)),\
-    (TEST_APP_AUTHORED)(TEST_APP_WITH_TIMESTAMPS)\
+    (TEST_APP_AUTHORED)(TEST_APP_WITH_TIMESTAMPS),\
+    (test_app::interface, comment)\
 )
 #define TEST_APP_COMMENT_MEMBERS T_MEMBERS(TEST_APP_COMMENT)\
     TEST_APP_AUTHORED_MEMBERS\
@@ -76,7 +98,9 @@
     (DATACLASS_MEMBER(TEST_APP_COMMENT, comment))\
     (DATACLASS_MEMBER(TEST_APP_POST, post))\
     (DATACLASS_MEMBER(CT_TEXT, description))\
-    (DATACLASS_MEMBER(TEST_APP_AUTHOR, author))\
+    (DATACLASS_MEMBER(TEST_APP_AUTHOR, author)),\
+    NONE,\
+    (test_app::interface, comment_post)\
 )
 #define TEST_APP_COMMENT_POST_MEMBERS T_MEMBERS(TEST_APP_COMMENT_POST)
 #define TEST_APP_COMMENT_POST_CONSTRUCTORS (TEST_APP_COMMENT_POST)
@@ -85,7 +109,8 @@
 #define TEST_APP_DOMAIN TYPE_DEFINITION_ALIAS(\
     TEST_APP_DOMAIN,\
     (test_app, domain),\
-    CT_INT8\
+    CT_INT8,\
+    (test_app::interface, domain)\
 )
 #define TEST_APP_DOMAIN_CONSTRUCTORS (TEST_APP_DOMAIN) CT_INT8_CONSTRUCTORS
 #define TEST_APP_DOMAIN_INHERITANCE_CHAIN (CT_INT8)
