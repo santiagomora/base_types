@@ -35,17 +35,17 @@ std::string ct::tp_to_string (const ct::date& w)
 }
 
 
-std::shared_ptr<ct::timestamptz> ct::utcnow ()
+ct::timestamptz ct::utcnow ()
 {
     ldt::time_zone_ptr zone(new ldt::posix_time_zone("UTC"));
     return ct::now(zone);
 }
 
 
-std::shared_ptr<ct::timestamptz> ct::now (const ldt::time_zone_ptr& zone)
+ct::timestamptz ct::now (const ldt::time_zone_ptr& zone)
 {
     const pt::ptime now = pt::second_clock::local_time();
-    return std::make_shared<ct::timestamptz>(ct::timestamptz(now, zone));
+    return {now, zone};
 }
 
 

@@ -25,6 +25,10 @@ struct describe_type : extracts_underlying<T>
 };
 
 
+template <typename, typename = std::void_t<>> struct HasWrapped : std::false_type {};
+template <typename T> struct HasWrapped<T, std::void_t<typename T::Wrapped>> : std::true_type {};
+
+
 template<typename... Args>
 struct py_subclass_registry
 {
@@ -345,7 +349,7 @@ std::string tp_to_string (const std::vector<T>& w)
     int ctr = 0;
     for(T elem : w)
     {
-        oss << (ctr++ > 0 ? ", " : "") << tp_to_string(elem);
+        oss << (ctr++ > 0 ? ", " : "") << tp_to_string<T>(elem);
     }
     oss << "}";
     return oss.str();
@@ -357,10 +361,19 @@ std::string tp_to_string (const std::optional<T>& w)
     {
         return "NULL";
     }
-    return tp_to_string<T>(w.value());
+    return tp_to_string(w.value());
 }
 template<typename T,  typename = std::enable_if_t<!(is_vector<T>::value || is_optional<T>::value)>>
-std::string tp_to_string (const T& w) { return w.to_string(); }
+std::string tp_to_string (const T& w) {
+    if constexpr (HasWrapped<T>::value)
+    {
+        return core_types::tp_to_string(w.value());
+    }
+    else
+    {
+        return core_types::tp_to_string(w);
+    }
+}
 template<typename T>
 std::string tp_to_string (const std::tuple<T>& w)
 {

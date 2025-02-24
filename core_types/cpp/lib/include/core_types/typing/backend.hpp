@@ -44,8 +44,8 @@ std::string tp_to_string (const timestamptz& w, const std::string format);
 std::string tp_to_string (const timestamptz& w);
 std::string tp_to_string (const date& w);
 
-std::shared_ptr<timestamptz> utcnow();
-std::shared_ptr<timestamptz> now(const ldt::time_zone_ptr&);
+timestamptz utcnow();
+timestamptz now(const ldt::time_zone_ptr&);
 
 template<typename T> T default_constructor ()
 {
