@@ -291,7 +291,7 @@ typename V::Wrapped extract_wrapped (V& w)
     return w.value();
 };
 template <typename V>
-std::vector<typename V::Wrapped> extract_wrapped (std::vector<V>& w) 
+std::vector<typename V::Wrapped> extract_wrapped (std::vector<V> w) 
 {
     std::vector<typename V::Wrapped> v_res = {};
     for(auto& d : w)
@@ -301,7 +301,7 @@ std::vector<typename V::Wrapped> extract_wrapped (std::vector<V>& w)
     return v_res;
 };
 template <typename V>
-std::optional<typename V::Wrapped> extract_wrapped (std::optional<V>& w) 
+std::optional<typename V::Wrapped> extract_wrapped (std::optional<V> w) 
 {
     if (w.has_value())
     {
@@ -339,55 +339,6 @@ int compare_ (const wrapper<T>& t, const wrapper<V>& v) {
         return 1;
     }
     return 0;
-}
-
-template<typename T>
-std::string tp_to_string (const std::vector<T>& w)
-{
-    std::ostringstream oss;
-    oss << "{";
-    int ctr = 0;
-    for(T elem : w)
-    {
-        oss << (ctr++ > 0 ? ", " : "") << tp_to_string<T>(elem);
-    }
-    oss << "}";
-    return oss.str();
-}
-template<typename T>
-std::string tp_to_string (const std::optional<T>& w)
-{
-    if (!w.has_value())
-    {
-        return "NULL";
-    }
-    return tp_to_string(w.value());
-}
-template<typename T,  typename = std::enable_if_t<!(is_vector<T>::value || is_optional<T>::value)>>
-std::string tp_to_string (const T& w) {
-    if constexpr (HasWrapped<T>::value)
-    {
-        return core_types::tp_to_string(w.value());
-    }
-    else
-    {
-        return core_types::tp_to_string(w);
-    }
-}
-template<typename T>
-std::string tp_to_string (const std::tuple<T>& w)
-{
-    return tp_to_string(std::get<0>(w));
-}
-template<typename T, typename... Rest>
-std::string tp_to_string (const std::tuple<T, Rest...>& w)
-{
-    std::ostringstream oss;
-    std::tuple<Rest...> tail = std::apply([](auto&, auto&... tail) {
-        return std::make_tuple(tail...);
-    }, w);
-    oss << tp_to_string(std::get<0>(w)) << ", " << tp_to_string<Rest...>(tail);
-    return oss.str();
 }
 
 }

@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <optional>
 #include <string>
+#include <vector>
 #include <pybind11/pybind11.h>
 #include <boost/date_time/gregorian/greg_date.hpp>
 #include <boost/date_time/gregorian/parsers.hpp>

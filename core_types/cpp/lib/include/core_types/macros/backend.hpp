@@ -51,6 +51,10 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
         BOOST_PP_SEQ_FOR_EACH(CM_COPY, other, C_ALL_MEMBERS(CLASS_DEF))\
         return *this;\
     }\
+    std::tuple<BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))> as_tuple() const\
+    {\
+        return std::make_tuple(BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)));\
+    }\
 };\
 
 /*
@@ -64,7 +68,7 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
 #define CPP_ENUMDEF_DECLARATION(ENUM_DEF)\
 enum T_NAME(T_NAMETUPLE(ENUM_DEF)) {\
 BOOST_PP_SEQ_ENUM(T_MEMBERS(ENUM_DEF))\
-}\
+}
 
 
 #define CPP_ALIASDEF_DECLARATION(ALIAS_DEF)\

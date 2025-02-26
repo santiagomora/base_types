@@ -12,7 +12,7 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
 \
     BOOST_PP_SEQ_FOR_EACH(IFACE_CL_MEMBER_DECLARATION, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))\
 \
-    T_QUALNAME(T_NAMETUPLE(CLASS_DEF)) value()\
+    T_QUALNAME(T_NAMETUPLE(CLASS_DEF)) value() const\
     {\
         return {BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_VALUE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))};\
     }\
@@ -38,8 +38,7 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
     }\
     std::string to_string () const\
     {\
-        std::tuple<BOOST_PP_SEQ_FOR_EACH_I(IFACE_CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))> tuple{BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))};\
-        return core_types::interface::tp_to_string<BOOST_PP_SEQ_FOR_EACH_I(IFACE_CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))>(tuple);\
+        return core_types::tp_to_string(value().as_tuple());\
     }\
 }
 
@@ -52,18 +51,6 @@ struct T_NAME(T_IFACE_TYPE(ENUM_DEF)) : public core_types::interface::wrapper<T_
     using core_types::interface::wrapper<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))>::wrapper;\
 \
     T_NAME(T_IFACE_TYPE(ENUM_DEF))(const T_NAME(T_IFACE_TYPE(ENUM_DEF))& other) : wrapper<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))>(other) {}\
-\
-    static std::string static_to_string(const T_QUALNAME(T_NAMETUPLE(ENUM_DEF)) value)\
-    {\
-        switch(value){\
-            BOOST_PP_SEQ_FOR_EACH(ED_TO_STRING_CASE, T_QUALNAME(T_NAMETUPLE(ENUM_DEF)), T_MEMBERS(ENUM_DEF))\
-        }\
-        throw std::invalid_argument(std::string("invalid argument for ") + BOOST_PP_STRINGIZE(T_QUALNAME(T_NAMETUPLE(ENUM_DEF)) + " enum conversion"));\
-    }\
-    std::string to_string() const\
-    {\
-        return T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))::static_to_string(value());\
-    }\
     py::object to_py(std::string subclass_name) const\
     {\
         return T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))::subclass_registry.to_py(subclass_name, *this);\

@@ -12,7 +12,7 @@ find_package(pybind11 REQUIRED)
 pybind11_add_module(${PROJECT_NAME}
     wrapper.cpp
 )
-# target_include_directories(${PROJECT_NAME} PRIVATE ${SGS_INCLUDE_PATH})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SGS_INCLUDE_PATH})
 target_include_directories(${PROJECT_NAME} PRIVATE ../lib/include)
 target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PYBIND11_INCLUDE_DIRS})

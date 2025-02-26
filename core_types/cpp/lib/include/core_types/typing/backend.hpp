@@ -1,5 +1,6 @@
 #ifndef CORE_TYPES_TYPING_BACKEND
 #define CORE_TYPES_TYPING_BACKEND
+#include <magic_enum/magic_enum.hpp>
 #include "core_types/typing/definitions.hpp"
 #include "core_types/macros/backend.hpp"
 
@@ -18,6 +19,13 @@ template <typename T> struct is_optional<std::optional<T>> : std::true_type {};
 
 template <typename T> struct is_vector : std::false_type {};
 template <typename T> struct is_vector<std::vector<T>> : std::true_type {};
+
+template <typename T, typename = void> struct is_tuple : std::false_type {};
+template <typename... Args> struct is_tuple<std::tuple<Args...>> : std::true_type {};
+
+template <typename, typename = std::void_t<>> struct has_as_tuple_method : std::false_type {};
+template <typename T> struct has_as_tuple_method<T, std::void_t<decltype(std::declval<T>().as_tuple())>> : std::true_type {};
+
 
 CPP_TYPEDEF_DECLARATION(CT_BOOLEAN);
 CPP_TYPEDEF_DECLARATION(CT_INT1);
@@ -43,6 +51,69 @@ std::string tp_to_string (const boolean& w);
 std::string tp_to_string (const timestamptz& w, const std::string format);
 std::string tp_to_string (const timestamptz& w);
 std::string tp_to_string (const date& w);
+template<typename... Args> std::string tp_to_string (const std::tuple<Args...>& w);
+template <typename T, typename = std::enable_if_t<std::is_enum<T>::value || has_as_tuple_method<T>::value>>
+std::string tp_to_string (const T& w)
+{
+    if constexpr (std::is_enum<T>::value)
+    {
+        return std::string(magic_enum::enum_name(w));
+    }
+    else
+    {
+        return tp_to_string(w.as_tuple());
+    }
+}
+template<typename T>//, typename = std::enable_if_t<is_vector<T>::value>>
+std::string tp_to_string (const std::vector<T>& w)
+{
+    std::ostringstream oss;
+    oss << "{";
+    int ctr = 0;
+    for(T elem : w)
+    {
+        oss << (ctr++ > 0 ? ", " : "") << tp_to_string(elem);
+    }
+    oss << "}";
+    return oss.str();
+}
+template<typename T>//, typename = std::enable_if_t<is_optional<T>::value>>
+std::string tp_to_string (const std::optional<T>& w)
+{
+    if (!w.has_value())
+    {
+        return "NULL";
+    }
+    return tp_to_string(w.value());
+}
+template<typename T, typename... Rest>
+std::string tp_to_string (const std::tuple<T, Rest...>& w, int level)
+{
+    std::ostringstream oss;
+    std::tuple<Rest...> tail = std::apply([](auto&, auto&... tail) {
+        return std::make_tuple(tail...);
+    }, w);
+    T elem = std::get<0>(w);
+    if (level == 0)
+    {
+        oss << "(";
+    }
+    oss << tp_to_string(elem);
+    if constexpr(std::tuple_size<std::tuple<Rest...>>{} > 0)
+    {
+        oss << ", " << tp_to_string<Rest...>(tail, level+1);
+    }
+    else
+    {
+        oss << ")";
+    }
+    return oss.str();
+}
+template<typename... Args>
+std::string tp_to_string (const std::tuple<Args...>& w)
+{
+    return tp_to_string(w, 0);
+}
 
 timestamptz utcnow();
 timestamptz now(const ldt::time_zone_ptr&);

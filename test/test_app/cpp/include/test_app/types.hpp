@@ -36,15 +36,15 @@ IFACE_CPP_CLASSDEF_DECLARATION(TEST_APP_COMMENT);
 IFACE_CPP_CLASSDEF_DECLARATION(TEST_APP_COMMENT_POST);
 IFACE_CPP_ALIASDEF_DECLARATION(TEST_APP_DOMAIN);
 
-const author&
-test_function_receives_author_correctly(const author& a);
-
-const comment_post&
-test_function_receives_comment_post_correctly(const comment_post&);
-
-
-const with_timestamps&
-test_function_receives_wt_subclass_correctly(const with_timestamps&);
+// const author&
+// test_function_receives_author_correctly(const author& a);
+// 
+// const comment_post&
+// test_function_receives_comment_post_correctly(const comment_post&);
+// 
+// 
+// const with_timestamps&
+// test_function_receives_wt_subclass_correctly(const with_timestamps&);
 
 }
 
