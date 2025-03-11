@@ -12,7 +12,7 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
 \
     BOOST_PP_SEQ_FOR_EACH(IFACE_CL_MEMBER_DECLARATION, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))\
 \
-    T_QUALNAME(T_NAMETUPLE(CLASS_DEF)) value() const\
+    T_QUALNAME(T_NAMETUPLE(CLASS_DEF)) wrapped() const\
     {\
         return {BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_VALUE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))};\
     }\
@@ -21,16 +21,17 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
     {}\
 \
     T_NAME(T_NAMETUPLE(CLASS_DEF)) (\
-        BOOST_PP_SEQ_ENUM(\
-            BOOST_PP_SEQ_TRANSFORM(IFACE_CL_MEMBER_ARGUMENT, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)))\
+        BOOST_PP_SEQ_FOR_EACH_I(IFACE_CL_MEMBER_ARGUMENT, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))\
     ) : \
-    BOOST_PP_SEQ_ENUM(\
-        BOOST_PP_SEQ_TRANSFORM(CM_INITIALIZE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)))\
+    BOOST_PP_SEQ_FOR_EACH_I(CM_INITIALIZE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))\
     {}\
     T_NAME(T_NAMETUPLE(CLASS_DEF)) (const T_NAME(T_NAMETUPLE(CLASS_DEF))& other)\
     : \
-    BOOST_PP_SEQ_ENUM(\
-        BOOST_PP_SEQ_TRANSFORM(CM_INITIALIZE, other, C_ALL_MEMBERS(CLASS_DEF)))\
+    BOOST_PP_SEQ_FOR_EACH_I(CM_INITIALIZE, other, C_ALL_MEMBERS(CLASS_DEF))\
+    {}\
+    T_NAME(T_NAMETUPLE(CLASS_DEF)) (const T_QUALNAME(T_NAMETUPLE(CLASS_DEF))& other)\
+    : \
+    BOOST_PP_SEQ_FOR_EACH_I(CM_INITIALIZE, other, C_ALL_MEMBERS(CLASS_DEF))\
     {}\
     py::object to_py(std::string subclass_name) const\
     {\
@@ -38,7 +39,7 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
     }\
     std::string to_string () const\
     {\
-        return core_types::tp_to_string(value().as_tuple());\
+        return core_types::tp_to_string(wrapped().as_tuple());\
     }\
 }
 

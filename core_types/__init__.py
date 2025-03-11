@@ -14,6 +14,8 @@ from .constraint import\
     this,\
     field,\
     Operand,\
+    ArithmeticOperand,\
+    ArithmeticOperation,\
     LogicOperand,\
     length,\
     OperandDefinitionContext

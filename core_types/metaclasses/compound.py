@@ -50,6 +50,8 @@ class _CompoundPydanticAdapt:
             tp: type = field_type.get_py_cls(field_type.qualified_name)
             if container_name == 'vector':
                 tp, default = list[tp], Undefined
+            elif container_name == 'deque':
+                tp, default = list[tp], Undefined
             elif container_name == 'optional':
                 tp, default = tp, None
             else:

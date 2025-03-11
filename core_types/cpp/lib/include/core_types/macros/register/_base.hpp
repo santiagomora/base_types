@@ -168,7 +168,7 @@ py::class_<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))>(m, BOOST_PP_STRINGIZE(T_NAME(T_I
 #define CT_TYPEDEF_REGISTER_BASE(TYPE_DEF, m)\
 py::class_<T_QUALNAME(T_IFACE_TYPE(TYPE_DEF)), std::unique_ptr<T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))>> (m, BOOST_PP_STRINGIZE(T_NAME(T_IFACE_TYPE(TYPE_DEF))))\
 .def(py::pickle(\
-    [](const T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))& a) { return py::make_tuple(a.value()); },\
+    [](const T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))& a) { return py::make_tuple(a.wrapped()); },\
     [](py::tuple t) { return T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))(t[0].cast<core_types::text>()); }\
 ))\
 .def("__str__", &T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))::to_string)\
@@ -186,7 +186,7 @@ py::class_<T_QUALNAME(T_IFACE_TYPE(TYPE_DEF)), std::unique_ptr<T_QUALNAME(T_IFAC
 #define CT_TYPE_ALIASDEF_REGISTER_BASE(ALIAS_DEF, m)\
 py::class_<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF)), std::unique_ptr<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))>>(m, BOOST_PP_STRINGIZE(T_NAME(T_IFACE_TYPE(ALIAS_DEF))))\
 .def(py::pickle(\
-    [](const T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))& a) { return py::make_tuple(a.value()); },\
+    [](const T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))& a) { return py::make_tuple(a.wrapped()); },\
     [](py::tuple t) { return T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))(t[0].cast<T_QUALIFIED_UNDERLYING_CLASS(ALIAS_DEF)>()); }\
 ))\
 .def("__str__", &T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))::to_string)\

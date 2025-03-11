@@ -31,7 +31,7 @@ BOOST_PP_COMMA_IF(i) T_QUALIFIED_UNDERLYING_CLASS(CM_TYPE(elem))
 
 
 #define CL_MEMBER_VALUE(r, data, i, elem)\
-BOOST_PP_COMMA_IF(i) core_types::interface::extract_wrapped(CM_NAME(elem))
+BOOST_PP_COMMA_IF(i) core_types::interface::tp_unwrap(CM_NAME(elem))
 
 
 #define CL_MEMBER_DECLARATION(r, data, elem)\
@@ -42,28 +42,32 @@ T_QUALNAME(T_NAMETUPLE(CM_TYPE(elem))) CM_NAME(elem) = core_types::default_const
 T_QUALIFIED_UNDERLYING_CLASS(CM_TYPE(elem))& CM_NAME(elem);
 
 
-#define CL_MEMBER_ARGUMENT(r, data, elem)\
-const T_QUALNAME(T_NAMETUPLE(CM_TYPE(elem)))& CM_NAME(elem)
+#define CL_MEMBER_ARGUMENT(r, data, i, elem)\
+BOOST_PP_COMMA_IF(i) const T_QUALNAME(T_NAMETUPLE(CM_TYPE(elem)))& CM_NAME(elem)
 
 
 #define CL_UNDERLYING_MEMBER_ARGUMENT(r, data, elem)\
 T_QUALIFIED_UNDERLYING_CLASS(CM_TYPE(elem)) CM_NAME(elem)
 
 
-#define CL_INITIALIZE_BASE(r, data, elem)\
-T_NAME(T_NAMETUPLE(elem))(BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(elem))) ,
+#define CL_MEMBER_NAME_T(r, data, elem)\
+CM_NAME(elem)
+
+
+#define CL_INITIALIZE_BASE(r, data, i, elem)\
+BOOST_PP_COMMA_IF(i) T_NAME(T_NAMETUPLE(elem))(BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(CL_MEMBER_NAME_T, BOOST_PP_EMPTY(), C_ALL_MEMBERS(elem))))
 
 
 #define CL_INITIALIZE_EMPTY_BASE(r, data, i, elem)\
 BOOST_PP_COMMA_IF(i) T_NAME(T_NAMETUPLE(elem))()
 
 
-#define CL_INITIALIZE_BASE_COPY(r, data, elem)\
-T_NAME(T_NAMETUPLE(elem))(data) ,
+#define CL_INITIALIZE_BASE_COPY(r, data, i, elem)\
+BOOST_PP_COMMA_IF(i) T_NAME(T_NAMETUPLE(elem))(data)
 
 
-#define CM_INITIALIZE(r, data, elem)\
-CM_NAME(elem)(BOOST_PP_IF(BOOST_PP_IS_EMPTY(data), CM_NAME(elem), data.CM_NAME(elem)))
+#define CM_INITIALIZE(r, data, i, elem)\
+BOOST_PP_COMMA_IF(i) CM_NAME(elem)(BOOST_PP_IF(BOOST_PP_IS_EMPTY(data), CM_NAME(elem), data.CM_NAME(elem)))
 
 
 #define CM_INITIALIZE_EMPTY_MEMBER(r, data, elem)\
@@ -97,8 +101,8 @@ BOOST_PP_COMMA_IF(i) T_QUALNAME(T_IFACE_TYPE(CM_TYPE(elem)))
 T_QUALNAME(T_IFACE_TYPE(CM_TYPE(elem))) CM_NAME(elem);
 
 
-#define IFACE_CL_MEMBER_ARGUMENT(r, data, elem)\
-const T_QUALNAME(T_IFACE_TYPE(CM_TYPE(elem)))& CM_NAME(elem)
+#define IFACE_CL_MEMBER_ARGUMENT(r, data, i, elem)\
+BOOST_PP_COMMA_IF(i) const T_QUALNAME(T_IFACE_TYPE(CM_TYPE(elem)))& CM_NAME(elem)
 
 
 #endif

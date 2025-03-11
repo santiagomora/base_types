@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 #include "core_types/macros/register/instanceable.hpp"
 #include "core_types/typing/interface.hpp"
+#include "include/test_app/definition.hpp"
 #include "test_app/types.hpp"
 #include "test_app/definition.hpp"
 
@@ -20,9 +21,10 @@ CT_ENUMDEF_REGISTER_INSTANCEABLE(TEST_APP_POST_STATUS, m);
 CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_POST, m);
 CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_COMMENT, m);
 CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_COMMENT_POST, m);
+CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_NO_MEMBERS, m);
 CT_TYPE_ALIASDEF_REGISTER_INSTANCEABLE(TEST_APP_DOMAIN, m, TEST_APP_DOMAIN_CONSTRUCTORS);
 
-// m.def("test_function_receives_author_correctly", &test_app::test_function_receives_author_correctly);
+m.def("test_function_receives_author_correctly", &test_app::interface::test_function_receives_author_correctly);
 // m.def("test_function_receives_comment_post_correctly", &test_app::test_function_receives_comment_post_correctly);
 // m.def("test_function_receives_wt_subclass_correctly", &test_app::test_function_receives_wt_subclass_correctly);
 }

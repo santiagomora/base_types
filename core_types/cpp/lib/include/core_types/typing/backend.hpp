@@ -11,6 +11,7 @@ namespace ldt = boost::local_time;
 namespace dt = boost::gregorian;
 
 
+// TODO add to_interface and to_backend free functions to convert types between their interface/backend types
 namespace core_types
 {
 
@@ -20,7 +21,10 @@ template <typename T> struct is_optional<std::optional<T>> : std::true_type {};
 template <typename T> struct is_vector : std::false_type {};
 template <typename T> struct is_vector<std::vector<T>> : std::true_type {};
 
-template <typename T, typename = void> struct is_tuple : std::false_type {};
+template <typename T> struct is_deque : std::false_type {};
+template <typename T> struct is_deque<std::deque<T>> : std::true_type {};
+
+template <typename T> struct is_tuple : std::false_type {};
 template <typename... Args> struct is_tuple<std::tuple<Args...>> : std::true_type {};
 
 template <typename, typename = std::void_t<>> struct has_as_tuple_method : std::false_type {};
@@ -70,7 +74,20 @@ std::string tp_to_string (const std::vector<T>& w)
     std::ostringstream oss;
     oss << "{";
     int ctr = 0;
-    for(T elem : w)
+    for(const T& elem : w)
+    {
+        oss << (ctr++ > 0 ? ", " : "") << tp_to_string(elem);
+    }
+    oss << "}";
+    return oss.str();
+}
+template<typename T>//, typename = std::enable_if_t<is_vector<T>::value>>
+std::string tp_to_string (const std::deque<T>& w)
+{
+    std::ostringstream oss;
+    oss << "{";
+    int ctr = 0;
+    for(const T& elem : w)
     {
         oss << (ctr++ > 0 ? ", " : "") << tp_to_string(elem);
     }
@@ -99,7 +116,7 @@ std::string tp_to_string (const std::tuple<T, Rest...>& w, int level)
         oss << "(";
     }
     oss << tp_to_string(elem);
-    if constexpr(std::tuple_size<std::tuple<Rest...>>{} > 0)
+    if constexpr (std::tuple_size<std::tuple<Rest...>>{} > 0)
     {
         oss << ", " << tp_to_string<Rest...>(tail, level+1);
     }
@@ -127,6 +144,24 @@ template<typename T> T default_constructor ()
     return T{};
 }
 template<> timestamptz default_constructor<timestamptz>();
+
+
+// template<typename T> T tp_from_string (const std::string& value) { return T(value); }
+// template <> int1 tp_from_string<int1> (const std::string& w) { return static_cast<int1>(std::stoi(w)); }
+// template <> int2 tp_from_string<int2> (const std::string& w) { return static_cast<int2>(std::stoi(w)); }
+// template <> int4 tp_from_string<int4> (const std::string& w) { return static_cast<int4>(std::stoi(w)); }
+// template <> float4 tp_from_string<float4> (const std::string& w) { return static_cast<float4>(std::stod(text)); }
+// template <> float8 tp_from_string<float8> (const std::string& w) { return static_cast<float8>(std::stod(text)); }
+// template <> text tp_from_string<text> (const std::string& w) { return w; }
+// template <> boolean tp_from_string<boolean> (const std::string& w) { return w == "true" ? boolean(1) : boolean(0); }
+// template <> timestamptz tp_from_string<timestamptz> (const std::string& w)
+// {
+//     ldt::time_zone_ptr zone(new ldt::posix_time_zone("UTC"));
+//     return timestamptz(pt::from_iso_extended_string(value.replace(10, 1, "T")), zone);
+// }
+// template <> date tp_from_string<date> (const std::string& w) { return (ct::date) dt::from_string(value); }
+
+
 }
 
 

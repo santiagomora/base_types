@@ -9,11 +9,13 @@ namespace ct = core_types;
 namespace py = pybind11;
 
 
+// TODO remove py_subclass_registry and substitute with a single py::object. I think a map is not needed
 namespace core_types::interface
 {
 
 template <typename T, typename Enable=void> struct extracts_underlying { using underlying = T; };
 template <typename T> struct extracts_underlying<std::vector<T>> { using underlying = T; };
+template <typename T> struct extracts_underlying<std::deque<T>> { using underlying = T; };
 template <typename T> struct extracts_underlying<std::optional<T>> { using underlying = T; };
 
 template <typename T>
@@ -21,6 +23,7 @@ struct describe_type : extracts_underlying<T>
 {
     static constexpr std::string_view container_name =
         ct::is_vector<T>::value ? "vector" :
+        ct::is_deque<T>::value ? "deque" :
         ct::is_optional<T>::value ? "optional": "none";
 };
 
@@ -86,20 +89,20 @@ struct wrapper
     }
     wrapper (const wrapper<T>& other)
     {
-        _value = std::unique_ptr<T>(new T(other.value()));
+        _value = std::unique_ptr<T>(new T(other.wrapped()));
     }
     template<typename V>
     int compare (const wrapper<V>& other) const
     {
         return compare_<T, V>(*this, other);
     }
-    T& value () const
+    T& wrapped () const
     {
         return *(_value.get());
     }
     std::string to_string () const
     {
-        return ct::tp_to_string(value());
+        return ct::tp_to_string(wrapped());
     }
 protected:
     std::unique_ptr<T> _value;
@@ -268,49 +271,139 @@ struct date : public wrapper<ct::date>
     }
 };
 
-// class timetz_py : public wrapper<timetz> {
-// HAS_PY_REPRESENTATION(timetz_py, value());
-// private:
-//     timetz parse_from_string (const std::string value) const {
-//         return pt::from_iso_string(value);
-//     }
-// public:
-//     using wrapper<timetz>::wrapper;
-//     timetz_py(const timetz_py& other) : wrapper<timetz>(other) {}
-//     timetz_py(std::string value) : 
-//     wrapper<timetz>(parse_from_string(value)) {}
-//     std::string to_string() const {
-//         return pt::to_iso_string(value());
-//     }
-// };
 
-
-template <typename V> //, typename = std::enable_if_t<!(is_vector<V>::value || is_optional<V>::value)>>
-typename V::Wrapped extract_wrapped (V& w) 
-{
-    return w.value();
+// NOTE UNWRAP
+template<typename V, typename... Rest> std::tuple<typename V::Wrapped, typename Rest::Wrapped...> tp_unwrap (
+    const std::tuple<V, Rest...>& w
+);
+template <typename V> typename V::Wrapped tp_unwrap (
+    V& w
+) {
+    return w.wrapped();
 };
-template <typename V>
-std::vector<typename V::Wrapped> extract_wrapped (std::vector<V> w) 
-{
+template <typename V> std::vector<typename V::Wrapped> tp_unwrap (
+    std::vector<V> w
+) {
     std::vector<typename V::Wrapped> v_res = {};
     for(auto& d : w)
     {
-        v_res.emplace_back(extract_wrapped(d));
+        v_res.emplace_back(tp_unwrap(d));
     }
     return v_res;
 };
-template <typename V>
-std::optional<typename V::Wrapped> extract_wrapped (std::optional<V> w) 
-{
+template <typename V> std::deque<typename V::Wrapped> tp_unwrap (
+    std::deque<V> w
+) {
+    std::deque<typename V::Wrapped> v_res = {};
+    for(auto& d : w)
+    {
+        v_res.emplace_back(tp_unwrap(d));
+    }
+    return v_res;
+};
+template <typename V> std::optional<typename V::Wrapped> tp_unwrap (
+    std::optional<V> w
+) {
     if (w.has_value())
     {
-        return extract_wrapped(w.value());
+        return tp_unwrap(w.value());
     }
     return std::nullopt;
 };
+template<typename V, typename... Rest> std::tuple<typename V::Wrapped, typename Rest::Wrapped...> tp_unwrap (
+    const std::tuple<V, Rest...>& w
+) {
+    auto v_first = std::get<0>(w);
+    if constexpr (std::tuple_size<std::tuple<Rest...>>{} > 0)
+    {
+        auto v_tail = std::apply([](auto&, auto&... tail) {
+            return std::make_tuple(tail...);
+        }, w);
+        return std::apply([&v_first](auto&&... tail) {
+            return std::make_tuple(tp_unwrap(v_first), tail...);
+        }, tp_unwrap(v_tail));
+    }
+    else
+    {
+        return std::make_tuple(tp_unwrap(v_first));
+    }
+}
 
 
+// NOTE WRAP
+template <typename> struct InnerType;
+template <template <typename, typename...> class T, typename V, typename...Args> struct InnerType<T<V, Args...>> {
+    using Head = V;
+    using Tail = std::tuple<Args...>;
+};
+
+template<typename T, typename V> T tp_wrap_tuple (
+    const V& w
+);
+template <typename T, typename V> T tp_wrap (
+    const V& w
+) {
+    if constexpr(ct::is_tuple<T>::value && ct::is_tuple<V>::value)
+    {
+        return tp_wrap_tuple<T>(w);
+    }
+    else
+    {
+        return T(w);
+    }
+}
+template<typename T, typename V> std::vector<T> tp_wrap (
+    const std::vector<V>& w
+) {
+    std::vector<T> v_res = {};
+    for(const V& elem : w)
+    {
+        v_res.emplace_back(tp_wrap<T>(elem));
+    }
+    return v_res;
+}
+template<typename T, typename V> std::deque<T> tp_wrap (
+    const std::deque<V>& w
+) {
+    std::deque<T> v_res = {};
+    for(const V& elem : w)
+    {
+        v_res.emplace_back(tp_wrap<T>(elem));
+    }
+    return v_res;
+}
+template<typename T, typename V> std::optional<T> tp_wrap (
+    const std::optional<V>& w
+) {
+    if (!w.has_value())
+    {
+        return std::nullopt;
+    }
+    return tp_wrap<T>(w.value());
+}
+template<typename T, typename V> T tp_wrap_tuple (
+    const V& w
+) {
+    using THead = InnerType<T>::Head;
+    using TTail = InnerType<T>::Tail;
+    auto v_first = std::get<0>(w);
+    if constexpr (std::tuple_size<TTail>{} > 0)
+    {
+        auto v_tail = std::apply([](auto&, auto&... tail) {
+            return std::make_tuple(tail...);
+        }, w);
+        return std::apply([&v_first](auto&&... tail) {
+            return std::make_tuple(tp_wrap<THead>(v_first), tail...);
+        }, tp_wrap_tuple<TTail>(v_tail));
+    }
+    else
+    {
+        return std::make_tuple(tp_wrap<THead>(v_first));
+    }
+}
+
+
+// NOTE COMPARE
 template<
 typename T, typename V, typename = std::enable_if_t<
     (std::is_arithmetic_v<T> && std::is_arithmetic_v<V>) ||
@@ -331,11 +424,12 @@ bool cmp_less_(ct::timestamptz t, ct::text v);
 bool cmp_less_(ct::date t, ct::text v);
 
 
-template<typename T, typename V>
-int compare_ (const wrapper<T>& t, const wrapper<V>& v) {
-    if  (cmp_less_(t.value(), v.value())) {
+template<typename T, typename V> int compare_ (
+    const wrapper<T>& t, const wrapper<V>& v
+) {
+    if  (cmp_less_(t.wrapped(), v.wrapped())) {
         return -1;
-    } else if (cmp_greater_(t.value(), v.value())) {
+    } else if (cmp_greater_(t.wrapped(), v.wrapped())) {
         return 1;
     }
     return 0;
