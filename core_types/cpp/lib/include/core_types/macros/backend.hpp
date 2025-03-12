@@ -12,7 +12,6 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
         (: BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_FOR_EACH(CL_INHERIT_BASE, BOOST_PP_EMPTY(), T_BASE(CLASS_DEF)))))\
     )\
 {\
-    using TupleType = std::tuple<BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))>;\
     BOOST_PP_SEQ_FOR_EACH(CL_MEMBER_DECLARATION, BOOST_PP_EMPTY(), T_MEMBERS(CLASS_DEF))\
 \
     T_NAME(T_NAMETUPLE(CLASS_DEF)) (\
@@ -57,7 +56,7 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
         BOOST_PP_SEQ_FOR_EACH(CM_COPY, other, C_ALL_MEMBERS(CLASS_DEF))\
         return *this;\
     }\
-    TupleType as_tuple() const\
+    auto as_tuple() const\
     {\
         return std::make_tuple(BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)));\
     }\

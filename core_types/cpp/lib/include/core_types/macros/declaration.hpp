@@ -31,7 +31,7 @@ BOOST_PP_COMMA_IF(i) T_QUALIFIED_UNDERLYING_CLASS(CM_TYPE(elem))
 
 
 #define CL_MEMBER_VALUE(r, data, i, elem)\
-BOOST_PP_COMMA_IF(i) core_types::interface::tp_unwrap(CM_NAME(elem))
+BOOST_PP_COMMA_IF(i) core_types::interface::unwrap(CM_NAME(elem))
 
 
 #define CL_MEMBER_DECLARATION(r, data, elem)\

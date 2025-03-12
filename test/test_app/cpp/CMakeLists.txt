@@ -11,12 +11,9 @@ set(pybind11_DIR ${PYTHON_VENV_PATH}/lib/python3.12/site-packages/pybind11/share
 find_package(pybind11 REQUIRED)
 pybind11_add_module(${PROJECT_NAME} 
     src/functions.cpp
-    src/init.cpp
     wrapper.cpp
 )
-# target_include_directories(${PROJECT_NAME} PRIVATE ${SGS_INCLUDE_PATH})
-target_include_directories(${PROJECT_NAME} PRIVATE /home/smora/sgs/dev/python/core/include)
-
+target_include_directories(${PROJECT_NAME} PRIVATE ${SGS_INCLUDE_PATH})
 target_include_directories(${PROJECT_NAME} PRIVATE ./include)
 target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PYBIND11_INCLUDE_DIRS})

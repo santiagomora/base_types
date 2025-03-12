@@ -12,6 +12,7 @@ namespace py = pybind11;
 
 // DEBUG clear && g++ -P -E -I/usr/include/boost -I/home/smora/sgs/dev/python/core/include/ -I/home/smora/.pyenv/versions/3.12.0/include/python3.12/ -I./include wrapper.cpp
 
+
 PYBIND11_MODULE (wrapper, m) 
 {
 CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_AUTHOR, m);
@@ -25,7 +26,10 @@ CT_CLASSDEF_REGISTER_INSTANCEABLE(TEST_APP_NO_MEMBERS, m);
 CT_TYPE_ALIASDEF_REGISTER_INSTANCEABLE(TEST_APP_DOMAIN, m, TEST_APP_DOMAIN_CONSTRUCTORS);
 
 m.def("test_function_receives_author_correctly", &test_app::interface::test_function_receives_author_correctly);
-// m.def("test_function_receives_comment_post_correctly", &test_app::test_function_receives_comment_post_correctly);
+m.def("test_get_author", [](){
+    return core_types::interface::to_py(test_app::interface::test_get_author());
+});
+
 // m.def("test_function_receives_wt_subclass_correctly", &test_app::test_function_receives_wt_subclass_correctly);
 }
 

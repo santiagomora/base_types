@@ -40,14 +40,14 @@ class _CompoundPydanticAdapt:
     def model(self) -> BaseModel:
         members = {}
         for base in self._tp._cpp_bases:
-            for name, info in base.get_py_cls(base.qualified_name).model_fields.items():
+            for name, info in base.get_py_cls().model_fields.items():
                 members[name] = (info.annotation, info.default, )
         # //for field_name, field_type in self._tp._cpp_fields.items():
         # //    members[field_name] = (field_type, Undefined, )
         for ix in range(0, len(self._tp._cpp_field_names)):
             field_name: str = self._tp._cpp_field_names[ix]
             field_type, container_name = self._tp._cpp_field_types[ix]
-            tp: type = field_type.get_py_cls(field_type.qualified_name)
+            tp: type = field_type.get_py_cls()
             if container_name == 'vector':
                 tp, default = list[tp], Undefined
             elif container_name == 'deque':
@@ -61,7 +61,7 @@ class _CompoundPydanticAdapt:
             f'{self._tp.__name__}_Model', **members
         )
         for base in self._tp._cpp_bases:
-            for name, info in base.get_py_cls(base.qualified_name).model_fields.items():
+            for name, info in base.get_py_cls().model_fields.items():
                 model.model_fields[name].metadata += info.metadata
                 if hasattr(info, 'default_factory'):
                     model.model_fields[name].default_factory = info.default_factory
@@ -150,7 +150,7 @@ class compound(type(ct_pybind_base)):
             cls, clsname, clsbases, clsdict | {
                 '__init__': __init__, '__repr__': __repr__
             })
-        rettype.set_py_cls(rettype.qualified_name, rettype)
+        rettype.set_py_cls(rettype)
         return rettype
 
     @property

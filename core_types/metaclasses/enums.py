@@ -70,7 +70,7 @@ class enum(type(ct_pybind_base)):
             raise TypeError(f'Class {cls} doesnt allow member declarations')
 
         rettype: type = super().__new__(cls, clsname, clsbases, clsdict)
-        rettype.set_py_cls(rettype.qualified_name, rettype)
+        rettype.set_py_cls(rettype)
         return rettype
 
     def __get_pydantic_core_schema__(

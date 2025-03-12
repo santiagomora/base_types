@@ -61,7 +61,7 @@ BOOST_PP_COMMA_IF(i) py::type::of<T_QUALNAME(T_IFACE_TYPE(elem))>()
 #define TD_PY_BASE_TYPE_CONSTRUCTOR_(r, data, elem)\
 .def(py::init([](const T_QUALNAME(T_IFACE_TYPE(elem))& other){\
     return std::unique_ptr<T_QUALNAME(T_IFACE_TYPE(data))>(\
-        new T_QUALNAME(T_IFACE_TYPE(data))(other.to_string()));\
+        new T_QUALNAME(T_IFACE_TYPE(data))(core_types::to_str(other)));\
 }))
 
 
@@ -90,26 +90,6 @@ TD_PY_PY_TYPE_CONSTRUCTOR(TYPE_DEF)
 })
 
 
-#define CT_TYPEDEF_REGISTER_SUBCLASS_REG(TYPE_DEF)\
-core_types::interface::py_subclass_registry<T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))> T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))::subclass_registry = core_types::interface::py_subclass_registry<T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))>()
-
-
-#define CT_ALIASDEF_REGISTER_SUBCLASS_REG(ALIAS_DEF)\
-core_types::interface::py_subclass_registry<BOOST_PP_IF(\
-    T_IS_CLASSDEF_ALIAS(ALIAS_DEF),\
-    BOOST_PP_SEQ_FOR_EACH_I(IFACE_CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(T_ALIAS_ORIGIN(ALIAS_DEF))),\
-    T_QUALNAME(T_IFACE_TYPE(T_ALIAS_ORIGIN(ALIAS_DEF)))\
-)>& T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))::subclass_registry = T_QUALNAME(T_IFACE_TYPE(T_ALIAS_ORIGIN(ALIAS_DEF)))::subclass_registry;
-
-
-#define CT_ENUMDEF_REGISTER_SUBCLASS_REG(ENUM_DEF)\
-core_types::interface::py_subclass_registry<T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))> T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))::subclass_registry = core_types::interface::py_subclass_registry<T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))>()
-
-
-#define CT_CLASSDEF_REGISTER_SUBCLASS_REG(CLASS_DEF)\
-core_types::interface::py_subclass_registry<BOOST_PP_SEQ_FOR_EACH_I(IFACE_CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))> T_QUALNAME(T_IFACE_TYPE(CLASS_DEF))::subclass_registry= core_types::interface::py_subclass_registry<BOOST_PP_SEQ_FOR_EACH_I(IFACE_CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))>()
-
-
 #define CT_CLASSDEF_REGISTER_BASE(CLASS_DEF, m)\
 py::class_<T_QUALNAME(T_IFACE_TYPE(CLASS_DEF))>(m, BOOST_PP_STRINGIZE(T_NAME(T_IFACE_TYPE(CLASS_DEF))))\
 .def_property_readonly_static("_cpp_field_names", [](const py::object&) -> py::tuple {\
@@ -124,16 +104,13 @@ py::class_<T_QUALNAME(T_IFACE_TYPE(CLASS_DEF))>(m, BOOST_PP_STRINGIZE(T_NAME(T_I
 .def_property_readonly_static("_cpp_bases", [](const py::object&) -> py::tuple {\
     return py::make_tuple(BOOST_PP_SEQ_FOR_EACH_I(C_PY_BASE_TP, BOOST_PP_EMPTY(), T_BASE(CLASS_DEF)));\
 })\
-.def_property_readonly_static("qualified_name", [](py::object&){\
-    return BOOST_PP_STRINGIZE(T_NAMESPACE(T_IFACE_TYPE(CLASS_DEF)).T_NAME(T_IFACE_TYPE(CLASS_DEF)));\
+.def_static("set_py_cls", [](const py::object& py_cls){\
+    return core_types::interface::cpp_py_class_mapping::set<T_QUALNAME(T_IFACE_TYPE(CLASS_DEF))>(py_cls);\
 })\
-.def_static("set_py_cls", [](std::string& subclass_name, py::object& cls){\
-    return T_QUALNAME(T_IFACE_TYPE(CLASS_DEF))::subclass_registry.set_py_cls(subclass_name, cls);\
+.def_static("get_py_cls", [](){\
+    return core_types::interface::cpp_py_class_mapping::get<T_QUALNAME(T_IFACE_TYPE(CLASS_DEF))>();\
 })\
-.def_static("get_py_cls", [](std::string& subclass_name){\
-    return T_QUALNAME(T_IFACE_TYPE(CLASS_DEF))::subclass_registry.get_py_cls(subclass_name);\
-})\
-.def("__str__", &T_QUALNAME(T_IFACE_TYPE(CLASS_DEF))::to_string)
+.def("__str__", [](const T_QUALNAME(T_IFACE_TYPE(CLASS_DEF))& tp){ return core_types::to_str(tp); })
 
 
 #define CT_CLASS_ALIASDEF_REGISTER_BASE(ALIAS_DEF, m)\
@@ -141,7 +118,6 @@ py::class_<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))>(m, BOOST_PP_STRINGIZE(T_NAME(T_I
 .def_property_readonly_static("_cpp_field_names", [](const py::object&) -> py::tuple {\
     return py::make_tuple(BOOST_PP_SEQ_FOR_EACH_I(C_PY_MEMBER_NAME_STR, BOOST_PP_EMPTY(), C_ALL_MEMBERS(ALIAS_DEF)));\
 })\
-.def("__str__", &T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))::to_string)\
 .def_property_readonly_static("_cpp_field_types", [](const py::object&) -> py::tuple {\
     return py::make_tuple(BOOST_PP_SEQ_FOR_EACH_I(C_PY_MEMBER_TP, BOOST_PP_EMPTY(), C_ALL_MEMBERS(ALIAS_DEF)));\
 })\
@@ -151,18 +127,16 @@ py::class_<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))>(m, BOOST_PP_STRINGIZE(T_NAME(T_I
 .def_property_readonly_static("_cpp_bases", [](const py::object&) -> py::tuple {\
     return py::make_tuple(py::type::of<T_QUALNAME(T_IFACE_TYPE(T_BASE(ALIAS_DEF)))>());\
 })\
-.def_static("set_py_cls", [](std::string& subclass_name, py::object& cls){\
-    return T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))::subclass_registry.set_py_cls(subclass_name, cls);\
-})\
-.def_static("get_py_cls", [](std::string& subclass_name){\
-    return T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))::subclass_registry.get_py_cls(subclass_name);\
-})\
-.def_property_readonly_static("qualified_name", [](py::object&){\
-    return BOOST_PP_STRINGIZE(T_NAMESPACE(T_IFACE_TYPE(ALIAS_DEF)).T_NAME(T_IFACE_TYPE(ALIAS_DEF)));\
-})\
 .def_property_readonly_static("base_type", [](py::object&){\
     return py::type::of<T_QUALNAME(T_IFACE_TYPE(T_BASE(ALIAS_DEF)))>();\
-})
+})\
+.def_static("set_py_cls", [](const py::object& py_cls){\
+    return core_types::interface::cpp_py_class_mapping::set<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))>(py_cls);\
+})\
+.def_static("get_py_cls", [](){\
+    return core_types::interface::cpp_py_class_mapping::get<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))>();\
+})\
+.def("__str__", [](const T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))& tp){ return core_types::to_str(tp); })
 
 
 #define CT_TYPEDEF_REGISTER_BASE(TYPE_DEF, m)\
@@ -171,16 +145,13 @@ py::class_<T_QUALNAME(T_IFACE_TYPE(TYPE_DEF)), std::unique_ptr<T_QUALNAME(T_IFAC
     [](const T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))& a) { return py::make_tuple(a.wrapped()); },\
     [](py::tuple t) { return T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))(t[0].cast<core_types::text>()); }\
 ))\
-.def("__str__", &T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))::to_string)\
-.def_static("set_py_cls", [](std::string& subclass_name, py::object& cls){\
-    return T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))::subclass_registry.set_py_cls(subclass_name, cls);\
+.def_static("set_py_cls", [](const py::object& py_cls){\
+    return core_types::interface::cpp_py_class_mapping::set<T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))>(py_cls);\
 })\
-.def_static("get_py_cls", [](std::string& subclass_name){\
-    return T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))::subclass_registry.get_py_cls(subclass_name);\
+.def_static("get_py_cls", [](){\
+    return core_types::interface::cpp_py_class_mapping::get<T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))>();\
 })\
-.def_property_readonly_static("qualified_name", [](py::object&){\
-    return BOOST_PP_STRINGIZE(T_NAMESPACE(T_IFACE_TYPE(TYPE_DEF)).T_NAME(T_IFACE_TYPE(TYPE_DEF)));\
-})
+.def("__str__", [](const T_QUALNAME(T_IFACE_TYPE(TYPE_DEF))& tp){ return core_types::to_str(tp); })
 
 
 #define CT_TYPE_ALIASDEF_REGISTER_BASE(ALIAS_DEF, m)\
@@ -189,58 +160,49 @@ py::class_<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF)), std::unique_ptr<T_QUALNAME(T_IFA
     [](const T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))& a) { return py::make_tuple(a.wrapped()); },\
     [](py::tuple t) { return T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))(t[0].cast<T_QUALIFIED_UNDERLYING_CLASS(ALIAS_DEF)>()); }\
 ))\
-.def("__str__", &T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))::to_string)\
-.def_static("set_py_cls", [](std::string& subclass_name, py::object& cls){\
-    return T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))::subclass_registry.set_py_cls(subclass_name, cls);\
-})\
-.def_static("get_py_cls", [](std::string& subclass_name){\
-    return T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))::subclass_registry.get_py_cls(subclass_name);\
-})\
-.def_property_readonly_static("qualified_name", [](py::object&){\
-    return BOOST_PP_STRINGIZE(T_NAMESPACE(T_IFACE_TYPE(ALIAS_DEF)).T_NAME(T_IFACE_TYPE(ALIAS_DEF)));\
-})\
 .def_property_readonly_static("base_type", [](py::object&){\
     return py::type::of<T_QUALNAME(T_IFACE_TYPE(T_BASE(ALIAS_DEF)))>();\
 })\
+.def_static("set_py_cls", [](const py::object& py_cls){\
+    return core_types::interface::cpp_py_class_mapping::set<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))>(py_cls);\
+})\
+.def_static("get_py_cls", [](){\
+    return core_types::interface::cpp_py_class_mapping::get<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))>();\
+})\
+.def("__str__", [](const T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))& tp){ return core_types::to_str(tp); })
 
 
 #define CT_ENUMDEF_REGISTER_BASE(ENUM_DEF, m)\
 py::enum_<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))>(m, BOOST_PP_STRINGIZE(T_QUALNAME(T_NAMETUPLE(ENUM_DEF))))\
 BOOST_PP_SEQ_FOR_EACH(E_PY_VALUE, T_QUALNAME(T_NAMETUPLE(ENUM_DEF)), T_MEMBERS(ENUM_DEF));\
 py::class_<T_QUALNAME(T_IFACE_TYPE(ENUM_DEF)), std::unique_ptr<T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))>>(m, BOOST_PP_STRINGIZE(T_NAME(T_IFACE_TYPE(ENUM_DEF))))\
-.def("__str__", &T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))::to_string)\
 .def_property_readonly_static("enum", [](py::object /* self */){\
     return py::type::of<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))>();\
 })\
-.def_static("set_py_cls", [](std::string& subclass_name, py::object& cls){\
-    return T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))::subclass_registry.set_py_cls(subclass_name, cls);\
+.def_static("set_py_cls", [](const py::object& py_cls){\
+    return core_types::interface::cpp_py_class_mapping::set<T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))>(py_cls);\
 })\
-.def_static("get_py_cls", [](std::string& subclass_name){\
-    return T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))::subclass_registry.get_py_cls(subclass_name);\
+.def_static("get_py_cls", [](){\
+    return core_types::interface::cpp_py_class_mapping::get<T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))>();\
 })\
-.def_property_readonly_static("qualified_name", [](py::object&){\
-    return BOOST_PP_STRINGIZE(T_NAMESPACE(T_IFACE_TYPE(ENUM_DEF)).T_NAME(T_IFACE_TYPE(ENUM_DEF)));\
-})\
+.def("__str__", [](const T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))& tp){ return core_types::to_str(tp); })
 
 
 #define CT_ENUM_ALIASDEF_REGISTER_BASE(ALIAS_DEF, m)\
 py::class_<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF)), std::unique_ptr<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))>>(m, BOOST_PP_STRINGIZE(T_NAME(T_IFACE_TYPE(ALIAS_DEF))))\
-.def("__str__", &T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))::to_string)\
 .def_property_readonly_static("enum", [](py::object& /* self */){\
     return py::type::of<T_QUALIFIED_UNDERLYING_CLASS(ALIAS_DEF)>();\
 })\
-.def_static("set_py_cls", [](std::string& subclass_name, py::object& cls){\
-    return T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))::subclass_registry.set_py_cls(subclass_name, cls);\
-})\
-.def_static("get_py_cls", [](std::string& subclass_name){\
-    return T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))::subclass_registry.get_py_cls(subclass_name);\
-})\
-.def_property_readonly_static("qualified_name", [](py::object&){\
-    return BOOST_PP_STRINGIZE(T_NAMESPACE(T_IFACE_TYPE(ALIAS_DEF)).T_NAME(T_IFACE_TYPE(ALIAS_DEF)));\
-})\
 .def_property_readonly_static("base_type", [](py::object&){\
     return py::type::of<T_QUALNAME(T_IFACE_TYPE(T_BASE(ALIAS_DEF)))>();\
-})
+})\
+.def_static("set_py_cls", [](const py::object& py_cls){\
+    return core_types::interface::cpp_py_class_mapping::set<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))>(py_cls);\
+})\
+.def_static("get_py_cls", [](){\
+    return core_types::interface::cpp_py_class_mapping::get<T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))>();\
+})\
+.def("__str__", [](const T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))& tp){ return core_types::to_str(tp); })
 
 
 #endif

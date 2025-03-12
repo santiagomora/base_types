@@ -40,6 +40,7 @@ IFACE_CPP_CLASSDEF_DECLARATION(TEST_APP_NO_MEMBERS);
 namespace test_app::interface
 {
 void test_function_receives_author_correctly();
+std::tuple<author, author> test_get_author();
 
 // const comment_post&
 // test_function_receives_comment_post_correctly(const comment_post&);

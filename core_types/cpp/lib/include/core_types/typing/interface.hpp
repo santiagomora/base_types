@@ -3,6 +3,7 @@
 #include "core_types/typing/definitions.hpp"
 #include "core_types/typing/backend.hpp"
 #include "core_types/macros/interface.hpp"
+#include <stdexcept>
 
 
 namespace ct = core_types;
@@ -30,39 +31,6 @@ struct describe_type : extracts_underlying<T>
 
 template <typename, typename = std::void_t<>> struct HasWrapped : std::false_type {};
 template <typename T> struct HasWrapped<T, std::void_t<typename T::Wrapped>> : std::true_type {};
-
-
-template<typename... Args>
-struct py_subclass_registry
-{
-    py_subclass_registry ()
-    {
-        clsmap = new std::map<std::string, py::object>();
-    }
-    ~py_subclass_registry ()
-    {
-        delete clsmap;
-    }
-    void set_py_cls (std::string subclass_name, py::object cls) const
-    {
-        if (clsmap->contains(subclass_name)) {
-            std::ostringstream err;
-            err << "Context error: subclass_name \"" << subclass_name << "\" already assigned.";
-            throw std::invalid_argument(err.str());
-        }
-        (*clsmap)[subclass_name] = cls;
-    }
-    py::object get_py_cls (std::string subclass_name) const
-    {
-        return (*clsmap)[subclass_name];
-    }
-    py::object to_py (std::string subclass_name, Args... args) const
-    {
-        return get_py_cls(subclass_name)(args...);
-    }
-private:
-    std::map<std::string, py::object>* clsmap;
-};
 
 
 template <typename T, typename V>
@@ -100,10 +68,6 @@ struct wrapper
     {
         return *(_value.get());
     }
-    std::string to_string () const
-    {
-        return ct::tp_to_string(wrapped());
-    }
 protected:
     std::unique_ptr<T> _value;
 };
@@ -112,14 +76,14 @@ protected:
 struct boolean : public wrapper<ct::boolean>
 {
     using wrapper<ct::boolean>::wrapper;
-    static py_subclass_registry<boolean> subclass_registry;
     boolean(const std::string text) : wrapper<ct::boolean>(_check_bool_value(text))
     {}
     boolean(const boolean& other) : wrapper<ct::boolean>(other)
     {}
-    py::object to_py(std::string subclass_name) const
+    static std::optional<py::object>& cls()
     {
-        return boolean::subclass_registry.to_py(subclass_name, *this);
+        static std::optional<py::object> cls;
+        return cls;
     }
 };
 
@@ -127,15 +91,15 @@ struct boolean : public wrapper<ct::boolean>
 struct int1 : public wrapper<ct::int1>
 {
     using wrapper<ct::int1>::wrapper;
-    static py_subclass_registry<int1> subclass_registry;
     // int1(long int v) : wrapper<ct::int1>(_check_value<ct::int1, long int>(v)) {}
     int1(const std::string text) : wrapper<ct::int1>(_check_value<ct::int1, long int>(std::stoi(text)))
     {}
     int1(const int1& other) : wrapper<ct::int1>(other)
     {}
-    py::object to_py(std::string subclass_name) const
+    static std::optional<py::object>& cls()
     {
-        return int1::subclass_registry.to_py(subclass_name, *this);
+        static std::optional<py::object> cls;
+        return cls;
     }
 };
 
@@ -143,15 +107,15 @@ struct int1 : public wrapper<ct::int1>
 struct int2 : public wrapper<ct::int2>
 {
     using wrapper<ct::int2>::wrapper;
-    static py_subclass_registry<int2> subclass_registry;
     // int2(long int v) : wrapper<ct::int2>(_check_value<ct::int2, long int>(v)) {}
     int2(const std::string text) : wrapper<ct::int2>(_check_value<ct::int2, long int>(std::stoi(text)))
     {}
     int2(const int2& other) : wrapper<ct::int2>(other)
     {}
-    py::object to_py(std::string subclass_name) const
+    static std::optional<py::object>& cls()
     {
-        return int2::subclass_registry.to_py(subclass_name, *this);
+        static std::optional<py::object> cls;
+        return cls;
     }
 };
 
@@ -159,15 +123,15 @@ struct int2 : public wrapper<ct::int2>
 struct int4 : public wrapper<ct::int4>
 {
     using wrapper<ct::int4>::wrapper;
-    static py_subclass_registry<int4> subclass_registry;
     // int4(long int v) : wrapper<ct::int4>(_check_value<ct::int4, long int>(v)) {}
     int4(const std::string text) : wrapper<ct::int4>(_check_value<ct::int4, long int>(std::stoi(text)))
     {}
     int4(const int4& other) : wrapper<ct::int4>(other)
     {}
-    py::object to_py(std::string subclass_name) const
+    static std::optional<py::object>& cls()
     {
-        return int4::subclass_registry.to_py(subclass_name, *this);
+        static std::optional<py::object> cls;
+        return cls;
     }
 };
 
@@ -175,15 +139,15 @@ struct int4 : public wrapper<ct::int4>
 struct int8 : public wrapper<ct::int8>
 {
     using wrapper<ct::int8>::wrapper;
-    static py_subclass_registry<int8> subclass_registry;
     // int8(long int v) : wrapper<ct::int8>(_check_value<ct::int8, long int>(v)) {}
     int8(const std::string text) : wrapper<ct::int8>(_check_value<ct::int8, long int>(std::stoi(text)))
     {}
     int8(const int8& other) : wrapper<ct::int8>(other)
     {}
-    py::object to_py(std::string subclass_name) const
+    static std::optional<py::object>& cls()
     {
-        return int8::subclass_registry.to_py(subclass_name, *this);
+        static std::optional<py::object> cls;
+        return cls;
     }
 };
 
@@ -193,14 +157,14 @@ struct float4 : public wrapper<ct::float4>
 {
     using wrapper<ct::float4>::wrapper;
     // float4(double v) : wrapper<ct::float4>(_check_value<ct::float4, double>(v)) {}
-    static py_subclass_registry<float4> subclass_registry;
     float4(const std::string text) : wrapper<ct::float4>(_check_value<ct::float4, double>(std::stod(text)))
     {}
     float4(const float4& other) : wrapper<ct::float4>(other)
     {}
-    py::object to_py(std::string subclass_name) const
+    static std::optional<py::object>& cls()
     {
-        return float4::subclass_registry.to_py(subclass_name, *this);
+        static std::optional<py::object> cls;
+        return cls;
     }
 };
 
@@ -209,14 +173,14 @@ struct float8 : public wrapper<ct::float8>
 {
     using wrapper<ct::float8>::wrapper;
     // float8(double v) : wrapper<ct::float8>(_check_value<ct::float8, double>(v)) {}
-    static py_subclass_registry<float8> subclass_registry;
     float8(const std::string text) : wrapper<ct::float8>(_check_value<ct::float8, double>(std::stod(text)))
     {}
     float8(const float8& other) : wrapper<ct::float8>(other)
     {}
-    py::object to_py(std::string subclass_name) const
+    static std::optional<py::object>& cls()
     {
-        return float8::subclass_registry.to_py(subclass_name, *this);
+        static std::optional<py::object> cls;
+        return cls;
     }
 };
 
@@ -224,12 +188,12 @@ struct float8 : public wrapper<ct::float8>
 struct text : public wrapper<ct::text>
 {
     using wrapper<ct::text>::wrapper;
-    static py_subclass_registry<text> subclass_registry;
     text(const text& other) : wrapper<ct::text>(other)
     {}
-    py::object to_py(std::string subclass_name) const
+    static std::optional<py::object>& cls()
     {
-        return text::subclass_registry.to_py(subclass_name, *this);
+        static std::optional<py::object> cls;
+        return cls;
     }
 };
 
@@ -237,7 +201,6 @@ struct text : public wrapper<ct::text>
 struct timestamptz : public wrapper<ct::timestamptz>
 {
     using wrapper<ct::timestamptz>::wrapper;
-    static py_subclass_registry<timestamptz> subclass_registry;
     timestamptz(const timestamptz& other) : wrapper<ct::timestamptz>(other) {}
     timestamptz(std::string value) : wrapper<ct::timestamptz>(timestamptz::parse_from_string(value))
     {}
@@ -246,9 +209,10 @@ struct timestamptz : public wrapper<ct::timestamptz>
         ldt::time_zone_ptr zone(new ldt::posix_time_zone("UTC"));
         return ct::timestamptz(pt::from_iso_extended_string(value.replace(10, 1, "T")), zone);
     }
-    py::object to_py(std::string subclass_name) const
+    static std::optional<py::object>& cls()
     {
-        return timestamptz::subclass_registry.to_py(subclass_name, *this);
+        static std::optional<py::object> cls;
+        return cls;
     }
 };
 
@@ -256,7 +220,6 @@ struct timestamptz : public wrapper<ct::timestamptz>
 struct date : public wrapper<ct::date>
 {
     using wrapper<ct::date>::wrapper;
-    static py_subclass_registry<date> subclass_registry;
     date(const date& other) : wrapper<ct::date>(other)
     {}
     date(std::string value) : wrapper<ct::date>(date::parse_from_string(value))
@@ -265,52 +228,53 @@ struct date : public wrapper<ct::date>
     {
         return (ct::date) dt::from_string(value);
     }
-    py::object to_py(std::string subclass_name) const
+    static std::optional<py::object>& cls()
     {
-        return date::subclass_registry.to_py(subclass_name, *this);
+        static std::optional<py::object> cls;
+        return cls;
     }
 };
 
 
 // NOTE UNWRAP
-template<typename V, typename... Rest> std::tuple<typename V::Wrapped, typename Rest::Wrapped...> tp_unwrap (
+template<typename V, typename... Rest> std::tuple<typename V::Wrapped, typename Rest::Wrapped...> unwrap (
     const std::tuple<V, Rest...>& w
 );
-template <typename V> typename V::Wrapped tp_unwrap (
+template <typename V> typename V::Wrapped unwrap (
     V& w
 ) {
     return w.wrapped();
 };
-template <typename V> std::vector<typename V::Wrapped> tp_unwrap (
+template <typename V> std::vector<typename V::Wrapped> unwrap (
     std::vector<V> w
 ) {
     std::vector<typename V::Wrapped> v_res = {};
     for(auto& d : w)
     {
-        v_res.emplace_back(tp_unwrap(d));
+        v_res.emplace_back(unwrap(d));
     }
     return v_res;
 };
-template <typename V> std::deque<typename V::Wrapped> tp_unwrap (
+template <typename V> std::deque<typename V::Wrapped> unwrap (
     std::deque<V> w
 ) {
     std::deque<typename V::Wrapped> v_res = {};
     for(auto& d : w)
     {
-        v_res.emplace_back(tp_unwrap(d));
+        v_res.emplace_back(unwrap(d));
     }
     return v_res;
 };
-template <typename V> std::optional<typename V::Wrapped> tp_unwrap (
+template <typename V> std::optional<typename V::Wrapped> unwrap (
     std::optional<V> w
 ) {
     if (w.has_value())
     {
-        return tp_unwrap(w.value());
+        return unwrap(w.value());
     }
     return std::nullopt;
 };
-template<typename V, typename... Rest> std::tuple<typename V::Wrapped, typename Rest::Wrapped...> tp_unwrap (
+template<typename V, typename... Rest> std::tuple<typename V::Wrapped, typename Rest::Wrapped...> unwrap (
     const std::tuple<V, Rest...>& w
 ) {
     auto v_first = std::get<0>(w);
@@ -320,72 +284,71 @@ template<typename V, typename... Rest> std::tuple<typename V::Wrapped, typename 
             return std::make_tuple(tail...);
         }, w);
         return std::apply([&v_first](auto&&... tail) {
-            return std::make_tuple(tp_unwrap(v_first), tail...);
-        }, tp_unwrap(v_tail));
+            return std::make_tuple(unwrap(v_first), tail...);
+        }, unwrap(v_tail));
     }
     else
     {
-        return std::make_tuple(tp_unwrap(v_first));
+        return std::make_tuple(unwrap(v_first));
     }
 }
 
 
 // NOTE WRAP
-template <typename> struct InnerType;
-template <template <typename, typename...> class T, typename V, typename...Args> struct InnerType<T<V, Args...>> {
+template <typename> struct TupleHeadTailType;
+template <template <typename, typename...> class T, typename V, typename...Args> struct TupleHeadTailType<T<V, Args...>> {
     using Head = V;
     using Tail = std::tuple<Args...>;
 };
-
-template<typename T, typename V> T tp_wrap_tuple (
+template<typename T, typename V> T wrap_tuple (
     const V& w
 );
-template <typename T, typename V> T tp_wrap (
+template <typename T, typename V> T wrap (
     const V& w
 ) {
     if constexpr(ct::is_tuple<T>::value && ct::is_tuple<V>::value)
     {
-        return tp_wrap_tuple<T>(w);
+        return wrap_tuple<T>(w);
     }
     else
     {
         return T(w);
     }
 }
-template<typename T, typename V> std::vector<T> tp_wrap (
+template<typename T, typename V> std::vector<T> wrap (
     const std::vector<V>& w
 ) {
     std::vector<T> v_res = {};
     for(const V& elem : w)
     {
-        v_res.emplace_back(tp_wrap<T>(elem));
+        v_res.emplace_back(wrap<T>(elem));
     }
     return v_res;
 }
-template<typename T, typename V> std::deque<T> tp_wrap (
+template<typename T, typename V> std::deque<T> wrap (
     const std::deque<V>& w
 ) {
     std::deque<T> v_res = {};
     for(const V& elem : w)
     {
-        v_res.emplace_back(tp_wrap<T>(elem));
+        v_res.emplace_back(wrap<T>(elem));
     }
     return v_res;
 }
-template<typename T, typename V> std::optional<T> tp_wrap (
+template<typename T, typename V> std::optional<T> wrap (
     const std::optional<V>& w
 ) {
     if (!w.has_value())
     {
         return std::nullopt;
     }
-    return tp_wrap<T>(w.value());
+    return wrap<T>(w.value());
 }
-template<typename T, typename V> T tp_wrap_tuple (
+template<typename T, typename V> T wrap_tuple (
     const V& w
 ) {
-    using THead = InnerType<T>::Head;
-    using TTail = InnerType<T>::Tail;
+    using THead = TupleHeadTailType<T>::Head;
+    using TTail = TupleHeadTailType<T>::Tail;
     auto v_first = std::get<0>(w);
     if constexpr (std::tuple_size<TTail>{} > 0)
     {
@@ -393,12 +356,102 @@ template<typename T, typename V> T tp_wrap_tuple (
             return std::make_tuple(tail...);
         }, w);
         return std::apply([&v_first](auto&&... tail) {
-            return std::make_tuple(tp_wrap<THead>(v_first), tail...);
-        }, tp_wrap_tuple<TTail>(v_tail));
+            return std::make_tuple(wrap<THead>(v_first), tail...);
+        }, wrap_tuple<TTail>(v_tail));
     }
     else
     {
-        return std::make_tuple(tp_wrap<THead>(v_first));
+        return std::make_tuple(wrap<THead>(v_first));
+    }
+}
+
+
+// NOTE TO_PY
+struct cpp_py_class_mapping
+{
+template <typename T> static void set (
+    py::object cls
+) {
+    if (T::cls().has_value())
+    {
+        std::ostringstream v_msg;
+        v_msg << "Type \"" << boost::typeindex::type_id<T>().pretty_name() << "\" cls already set.";
+        throw std::invalid_argument(v_msg.str());
+    }
+    T::cls() = cls;
+}
+template <typename T> static py::object& get ()
+{
+    if (!T::cls().has_value())
+    {
+        std::ostringstream v_msg;
+        v_msg << "Type \"" << boost::typeindex::type_id<T>().pretty_name() << "\" cls not assigned.";
+        throw std::invalid_argument(v_msg.str());
+    }
+    return T::cls().value();
+}
+};
+template<typename T, typename... Rest> auto to_py (
+    const std::tuple<T, Rest...>& w
+);
+template <typename T> py::object to_py (
+    const T& obj
+) {
+    py::object cls = py::type::of<T>().attr("get_py_cls")();
+    if constexpr (has_as_tuple_method<T>::value)
+    {
+        return std::apply([&cls](auto&&... args){ return cls(to_py(args)...); }, obj.as_tuple());
+    }
+    else
+    {
+        return cls(obj);
+    }
+}
+template<typename T> std::vector<py::object> to_py (
+    const std::vector<T>& w
+) {
+    std::vector<py::object> v_res = {};
+    for(const T& elem : w)
+    {
+        v_res.emplace_back(to_py(elem));
+    }
+    return v_res;
+}
+template<typename T> std::deque<py::object> to_py (
+    const std::deque<T>& w
+) {
+    std::deque<T> v_res = {};
+    for(const T& elem : w)
+    {
+        v_res.emplace_back(to_py(elem));
+    }
+    return v_res;
+}
+template<typename T> std::optional<py::object> to_py (
+    const std::optional<T>& w
+) {
+    if (!w.has_value())
+    {
+        return std::nullopt;
+    }
+    return to_py(w.value());
+}
+template<typename T, typename... Rest> auto to_py (
+    const std::tuple<T, Rest...>& w
+) {
+    auto v_first = std::get<0>(w);
+    if constexpr (std::tuple_size<std::tuple<Rest...>>{} > 0)
+    {
+        auto v_tail = std::apply([](auto&, auto&... tail) {
+            return std::make_tuple(tail...);
+        }, w);
+        return std::apply([&v_first](auto&&... tail) {
+            return std::make_tuple(to_py(v_first), tail...);
+        }, to_py(v_tail));
+    }
+    else
+    {
+        return std::make_tuple(to_py(v_first));
     }
 }
 

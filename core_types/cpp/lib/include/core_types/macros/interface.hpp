@@ -8,7 +8,6 @@
 struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
 {\
     using Wrapped = T_QUALNAME(T_NAMETUPLE(CLASS_DEF));\
-    static core_types::interface::py_subclass_registry<BOOST_PP_SEQ_FOR_EACH_I(IFACE_CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))> subclass_registry;\
 \
     BOOST_PP_SEQ_FOR_EACH(IFACE_CL_MEMBER_DECLARATION, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))\
 \
@@ -29,17 +28,20 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
     : \
     BOOST_PP_SEQ_FOR_EACH_I(CM_INITIALIZE, other, C_ALL_MEMBERS(CLASS_DEF))\
     {}\
+\
     T_NAME(T_NAMETUPLE(CLASS_DEF)) (const T_QUALNAME(T_NAMETUPLE(CLASS_DEF))& other)\
     : \
     BOOST_PP_SEQ_FOR_EACH_I(CM_INITIALIZE, other, C_ALL_MEMBERS(CLASS_DEF))\
     {}\
-    py::object to_py(std::string subclass_name) const\
+\
+    static std::optional<py::object>& cls()\
     {\
-        return T_QUALNAME(T_IFACE_TYPE(CLASS_DEF))::subclass_registry.to_py(subclass_name, BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)));\
+        static std::optional<py::object> cls;\
+        return cls;\
     }\
-    std::string to_string () const\
+    auto as_tuple() const\
     {\
-        return core_types::tp_to_string(wrapped().as_tuple());\
+        return std::make_tuple(BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)));\
     }\
 }
 
@@ -48,13 +50,12 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
 struct T_NAME(T_IFACE_TYPE(ENUM_DEF)) : public core_types::interface::wrapper<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))>\
 {\
     using Wrapped = T_QUALNAME(T_NAMETUPLE(ENUM_DEF));\
-    static core_types::interface::py_subclass_registry<T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))> subclass_registry;\
     using core_types::interface::wrapper<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))>::wrapper;\
-\
     T_NAME(T_IFACE_TYPE(ENUM_DEF))(const T_NAME(T_IFACE_TYPE(ENUM_DEF))& other) : wrapper<T_QUALNAME(T_NAMETUPLE(ENUM_DEF))>(other) {}\
-    py::object to_py(std::string subclass_name) const\
+    static std::optional<py::object>& cls()\
     {\
-        return T_QUALNAME(T_IFACE_TYPE(ENUM_DEF))::subclass_registry.to_py(subclass_name, *this);\
+        static std::optional<py::object> cls;\
+        return cls;\
     }\
 }
 
@@ -63,16 +64,16 @@ struct T_NAME(T_IFACE_TYPE(ENUM_DEF)) : public core_types::interface::wrapper<T_
 struct T_NAME(T_IFACE_TYPE(ALIAS_DEF)) : public T_QUALNAME(T_IFACE_TYPE(T_BASE(ALIAS_DEF)))\
 {\
     using Wrapped = T_QUALNAME(T_NAMETUPLE(ALIAS_DEF));\
-    static core_types::interface::py_subclass_registry<BOOST_PP_IF(\
-        T_IS_CLASSDEF_ALIAS(ALIAS_DEF),\
-        BOOST_PP_SEQ_FOR_EACH_I(IFACE_CL_MEMBER_TYPE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(T_BASE(ALIAS_DEF))),\
-        T_QUALNAME(T_IFACE_TYPE(T_ALIAS_ORIGIN(ALIAS_DEF)))\
-    )>& subclass_registry;\
     using T_QUALNAME(T_IFACE_TYPE(T_BASE(ALIAS_DEF)))::T_NAME(T_IFACE_TYPE(T_BASE(ALIAS_DEF)));\
     \
     T_NAME(T_IFACE_TYPE(ALIAS_DEF))(const T_QUALNAME(T_IFACE_TYPE(T_BASE(ALIAS_DEF)))& other) : T_QUALNAME(T_IFACE_TYPE(T_BASE(ALIAS_DEF)))(other) {}\
     \
     T_NAME(T_IFACE_TYPE(ALIAS_DEF))(const T_QUALNAME(T_IFACE_TYPE(ALIAS_DEF))& other) : T_QUALNAME(T_IFACE_TYPE(T_BASE(ALIAS_DEF)))(other) {}\
+    static std::optional<py::object>& cls()\
+    {\
+        static std::optional<py::object> cls;\
+        return cls;\
+    }\
 }
 
 
