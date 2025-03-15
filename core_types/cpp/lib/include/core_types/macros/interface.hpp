@@ -11,11 +11,6 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
 \
     BOOST_PP_SEQ_FOR_EACH(IFACE_CL_MEMBER_DECLARATION, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))\
 \
-    T_QUALNAME(T_NAMETUPLE(CLASS_DEF)) wrapped() const\
-    {\
-        return {BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_VALUE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))};\
-    }\
-\
     T_NAME(T_NAMETUPLE(CLASS_DEF))()\
     {}\
 \
@@ -29,19 +24,20 @@ struct T_NAME(T_NAMETUPLE(CLASS_DEF))\
     BOOST_PP_SEQ_FOR_EACH_I(CM_INITIALIZE, other, C_ALL_MEMBERS(CLASS_DEF))\
     {}\
 \
-    T_NAME(T_NAMETUPLE(CLASS_DEF)) (const T_QUALNAME(T_NAMETUPLE(CLASS_DEF))& other)\
-    : \
-    BOOST_PP_SEQ_FOR_EACH_I(CM_INITIALIZE, other, C_ALL_MEMBERS(CLASS_DEF))\
-    {}\
+    auto as_tuple() const\
+    {\
+        return std::make_tuple(BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)));\
+    }\
+\
+    T_QUALNAME(T_NAMETUPLE(CLASS_DEF)) wrapped() const\
+    {\
+        return {BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_VALUE, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF))};\
+    }\
 \
     static std::optional<py::object>& cls()\
     {\
         static std::optional<py::object> cls;\
         return cls;\
-    }\
-    auto as_tuple() const\
-    {\
-        return std::make_tuple(BOOST_PP_SEQ_FOR_EACH_I(CL_MEMBER_NAME, BOOST_PP_EMPTY(), C_ALL_MEMBERS(CLASS_DEF)));\
     }\
 }
 

@@ -14,13 +14,13 @@ namespace py = pybind11;
 namespace core_types::interface
 {
 
-template <typename T, typename Enable=void> struct extracts_underlying { using underlying = T; };
-template <typename T> struct extracts_underlying<std::vector<T>> { using underlying = T; };
-template <typename T> struct extracts_underlying<std::deque<T>> { using underlying = T; };
-template <typename T> struct extracts_underlying<std::optional<T>> { using underlying = T; };
+template <typename T, typename Enable=void> struct underlying { using type = T; };
+template <typename T> struct underlying<std::vector<T>> { using type = T; };
+template <typename T> struct underlying<std::deque<T>> { using type = T; };
+template <typename T> struct underlying<std::optional<T>> { using type = T; };
 
 template <typename T>
-struct describe_type : extracts_underlying<T>
+struct describe_type : underlying<T>
 {
     static constexpr std::string_view container_name =
         ct::is_vector<T>::value ? "vector" :
@@ -300,51 +300,42 @@ template <template <typename, typename...> class T, typename V, typename...Args>
     using Head = V;
     using Tail = std::tuple<Args...>;
 };
-template<typename T, typename V> T wrap_tuple (
-    const V& w
-);
 template <typename T, typename V> T wrap (
     const V& w
+);
+template<typename T, typename V> T _wrap_vector (
+    const V& w
 ) {
-    if constexpr(ct::is_tuple<T>::value && ct::is_tuple<V>::value)
+    using TUnder = underlying<T>::type;
+    T v_res = {};
+    for (const auto& elem : w)
     {
-        return wrap_tuple<T>(w);
-    }
-    else
-    {
-        return T(w);
-    }
-}
-template<typename T, typename V> std::vector<T> wrap (
-    const std::vector<V>& w
-) {
-    std::vector<T> v_res = {};
-    for(const V& elem : w)
-    {
-        v_res.emplace_back(wrap<T>(elem));
+        v_res.emplace_back(wrap<TUnder>(elem));
     }
     return v_res;
 }
-template<typename T, typename V> std::deque<T> wrap (
-    const std::deque<V>& w
+template<typename T, typename V> T _wrap_deque (
+    const V& w
 ) {
-    std::deque<T> v_res = {};
-    for(const V& elem : w)
+    using TUnder = underlying<T>::type;
+    T v_res = {};
+    for (const auto& elem : w)
     {
-        v_res.emplace_back(wrap<T>(elem));
+        v_res.emplace_back(wrap<TUnder>(elem));
     }
     return v_res;
 }
-template<typename T, typename V> std::optional<T> wrap (
-    const std::optional<V>& w
+template<typename T, typename V> T _wrap_optional (
+    const V& w
 ) {
+    using TUnder = underlying<T>::type;
     if (!w.has_value())
     {
         return std::nullopt;
     }
-    return wrap<T>(w.value());
+    return wrap<TUnder>(w.value());
 }
-template<typename T, typename V> T wrap_tuple (
+template<typename T, typename V> T _wrap_tuple (
     const V& w
 ) {
     using THead = TupleHeadTailType<T>::Head;
@@ -357,11 +348,42 @@ template<typename T, typename V> T wrap_tuple (
         }, w);
         return std::apply([&v_first](auto&&... tail) {
             return std::make_tuple(wrap<THead>(v_first), tail...);
-        }, wrap_tuple<TTail>(v_tail));
+        }, _wrap_tuple<TTail>(v_tail));
     }
     else
     {
         return std::make_tuple(wrap<THead>(v_first));
+    }
+}
+template <typename T, typename V> T wrap (
+    const V& w
+) {
+    if constexpr (ct::is_tuple<T>::value)
+    {
+        return _wrap_tuple<T>(w);
+    }
+    else if constexpr (ct::is_vector<T>::value)
+    {
+        return _wrap_vector<T>(w);
+    }
+    else if constexpr (ct::is_deque<T>::value)
+    {
+        return _wrap_deque<T>(w);
+    }
+    else if constexpr (ct::is_optional<T>::value)
+    {
+        return _wrap_optional<T>(w);
+    }
+    else if constexpr (has_as_tuple_method<T>::value)
+    {
+        auto tup = w.as_tuple();
+        return std::apply([](auto&&... args){
+            return T(args...);
+        }, _wrap_tuple<decltype(std::declval<T>().as_tuple())>(tup));
+    }
+    else
+    {
+        return T(w);
     }
 }
 
@@ -400,7 +422,9 @@ template <typename T> py::object to_py (
     py::object cls = py::type::of<T>().attr("get_py_cls")();
     if constexpr (has_as_tuple_method<T>::value)
     {
-        return std::apply([&cls](auto&&... args){ return cls(to_py(args)...); }, obj.as_tuple());
+        return std::apply([&cls](auto&&... args){
+            return cls(args...);
+        }, to_py(obj.as_tuple()));
     }
     else
     {
@@ -420,7 +444,7 @@ template<typename T> std::vector<py::object> to_py (
 template<typename T> std::deque<py::object> to_py (
     const std::deque<T>& w
 ) {
-    std::deque<T> v_res = {};
+    std::deque<py::object> v_res = {};
     for(const T& elem : w)
     {
         v_res.emplace_back(to_py(elem));

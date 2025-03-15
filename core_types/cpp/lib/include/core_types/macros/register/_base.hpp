@@ -27,7 +27,7 @@ BOOST_PP_COMMA_IF(i) BOOST_PP_STRINGIZE(BOOST_PP_TUPLE_ELEM(1, elem))
 
 #define C_PY_MEMBER_TP(r, data, i, elem)\
 BOOST_PP_COMMA_IF(i) py::make_tuple(\
-    py::type::of<core_types::interface::describe_type<T_QUALNAME(T_IFACE_TYPE(CM_TYPE(elem)))>::underlying>(),\
+    py::type::of<core_types::interface::describe_type<T_QUALNAME(T_IFACE_TYPE(CM_TYPE(elem)))>::type>(),\
     core_types::interface::describe_type<T_QUALNAME(T_IFACE_TYPE(CM_TYPE(elem)))>::container_name\
 )
 
