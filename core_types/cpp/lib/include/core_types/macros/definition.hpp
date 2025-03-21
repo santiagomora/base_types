@@ -6,6 +6,7 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/logical/or.hpp>
+#include <boost/type_index.hpp>
 
 
 // NOTE IDENTIFIERS, CONTAINERS MUST BE 0
