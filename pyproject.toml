@@ -1,20 +1,21 @@
 [build-system]
-requires = ["setuptools", "wheel"]  # Add other build dependencies if needed
+requires = ["setuptools>=69.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "core_types"
-version = "1.0.0a0"
+version = "0.0.0"
 description = "Core C++ type wrappers"
 readme = "README.md"
-license = { text = "GPL-3.0" }
 keywords = ["test", "cmake", "extension"]
 requires-python = ">=3.12"
 classifiers = [
 ]
-
-[project.optional-dependencies]
-dev = ["pytest"]
+dynamic = ["dependencies", "optional-dependencies"]
 
 [tool.setuptools]
 zip-safe = false
+
+[tool.setuptools.dynamic]
+dependencies = { file = "requirements.txt" }
+optional-dependencies = { dev = { file = "dev-requirements.txt" } }
