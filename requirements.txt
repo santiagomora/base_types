@@ -3,7 +3,6 @@ compress-pickle==2.1.0
 lz4==4.3.3
 packaging==24.1
 pluggy==1.5.0
-pybind11==2.13.6
 pydantic==2.10.6
 pydantic_core==2.27.2
 semver==3.0.2
