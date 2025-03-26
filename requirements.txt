@@ -9,3 +9,4 @@ semver==3.0.2
 setuptools==69.0.3
 typing_extensions==4.12.2
 toml==0.10.2
+pybind11==2.13.6
