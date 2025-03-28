@@ -53,6 +53,9 @@ cmake_extensions = [
 class BuildCMakeExt(build_ext):
     def run(self):
         self.distribution.data_files = []
+        self.tmp_data_files_lib_dir: str = os.path.join(os.path.join(os.getcwd(), 'build', 'tmp', 'data'), 'lib')
+        os.makedirs(self.tmp_data_files_lib_dir, exist_ok=True)
+        os.environ['BUILD_TMP_DATA_LIB_DIR'] = self.tmp_data_files_lib_dir
         for extension in self.extensions:
             print(f"[BUILD] \"{extension.name}\": Building", file=sys.stdout)
             self.build_cmake(extension)
@@ -100,8 +103,6 @@ class InstallCMakeLibs(install_lib):
             for ext in cmake_extensions:
                 if lib.startswith(ext.name):
                     extensions.append((lib, ext, ))
-        tmp_data_files_dir: str = os.path.join('build', 'tmp', 'data', 'lib')
-        os.makedirs(tmp_data_files_dir, exist_ok=True)
         for libname, ext in extensions:
             install_path = ''
             src_path = ''
@@ -115,28 +116,12 @@ class InstallCMakeLibs(install_lib):
             else:
                 # its a so library
                 install_path = ext.so_destination_path
-                tmp_install_path: str = os.path.join(tmp_data_files_dir, libname)
+                tmp_install_path: str = os.path.join(os.path.join(os.environ['BUILD_TMP_DATA_LIB_DIR'], libname))
                 if os.path.exists(tmp_install_path):
                     os.remove(tmp_install_path)
                 shutil.move(os.path.join(build_dir, libname), tmp_install_path)
                 self.distribution.data_files.append((install_path, [tmp_install_path]))
         super().run()
-
-
-def is_dev_install() -> bool:
-    # Check if a specific dev package is installed
-    has_error: False
-    with open('dev-requirements.txt', 'r') as f:
-        for package in f:
-            name, ver = tuple(package.split('>='))
-            try:
-                mod: ModuleType = importlib.import_module(name)
-                if version.parse(mod.__version__) < version.parse(ver):
-                    raise Exception(f'DEV Dependency {name} not satisfied: required {version}, got {mod.__version__}')
-            except Exception as e:
-                print(str(e), file=sys.stdout)
-                has_error = True
-    return not has_error
 
 
 class InstallCMakeHeaders(install_headers):

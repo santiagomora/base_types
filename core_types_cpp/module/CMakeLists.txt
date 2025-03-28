@@ -12,8 +12,12 @@ find_package(pybind11 REQUIRED)
 pybind11_add_module(${PROJECT_NAME}
     wrapper.cpp
 )
+target_link_directories(${PROJECT_NAME} PRIVATE ${SGS_LIB_PATH})
+target_link_directories(${PROJECT_NAME} PRIVATE $ENV{BUILD_TMP_DATA_LIB_DIR})
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${SGS_INCLUDE_PATH})
 target_include_directories(${PROJECT_NAME} PRIVATE ../lib/include)
 target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PYBIND11_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SGS_LIB_PATH}/libcore_types.so)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE core_types)
