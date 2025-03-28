@@ -2,7 +2,7 @@ from typing import\
     Any
 from pydantic.fields import\
     FieldInfo
-from core_types.cpp.module.wrapper import ct_pybind_base
+from core_types.cpp.wrapper import ct_pybind_base
 import functools
 from pydantic import\
     create_model,\

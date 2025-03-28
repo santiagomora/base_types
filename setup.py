@@ -1,91 +1,75 @@
-from distutils.command.install_data import install_data
 from setuptools import find_packages, setup, Extension
 from setuptools.command.build_ext import build_ext
 from setuptools.command.install_lib import install_lib
-# from setuptools.command.install_scripts import install_scripts
-# from setuptools.command.install import install
+from distutils.command.install_headers import install_headers
 import struct
 import sys
 import pathlib
 import os
 import shutil
-import glob
+from typing import Optional
+from glob import glob
+import importlib.metadata
+from types import ModuleType
+from packaging import version
 
 
 BITS = struct.calcsize("P") * 8
 PACKAGE_NAME = "core_types"
+PACKAGE_CPP_NAME = "core_types_cpp"
 PYTHON_VERSION = "3.12"
-INCLUDE_DEST = os.path.join(sys.prefix, 'include',  f'python{PYTHON_VERSION}', 'sgs')
 
 
 class CMakeExtension(Extension):
-    """
-    An extension to run the cmake build
-
-    This simply overrides the base extension class so that setuptools
-    doesn't try to build your sources for you
-    """
-
     def __init__(
         self, *, name: str, cmake_lists_path: list[str], so_destination_path: str,
-        include_files_destination_path: str
+        is_package: bool, include_files_path: Optional[tuple[str, str]]
     ):
         super().__init__(name=name, sources=[])
         self.cmake_lists_path = cmake_lists_path
         self.so_destination_path = so_destination_path
-        self.include_files_destination_path = include_files_destination_path
+        self.include_files_path = include_files_path
+        self.is_package = is_package
 
 
 cmake_extensions = [
     CMakeExtension(
         name='libcore_types',
-        cmake_lists_path=os.path.join(PACKAGE_NAME, 'cpp', 'lib'),
-        so_destination_path=os.path.join(sys.prefix, 'lib',  f'python{PYTHON_VERSION}', 'sgs'),
-        include_files_destination_path=os.path.join(sys.prefix, 'include', f'python{PYTHON_VERSION}', 'sgs')
+        cmake_lists_path=os.path.join(PACKAGE_CPP_NAME, 'lib'),
+        so_destination_path=os.path.join('lib',  f'python{PYTHON_VERSION}', 'sgs'),
+        include_files_path=(os.path.join(PACKAGE_CPP_NAME, 'lib', 'include'), os.path.join('include', f'python{PYTHON_VERSION}')),
+        is_package=False
     ),
     CMakeExtension(
         name='wrapper',
-        cmake_lists_path=os.path.join(PACKAGE_NAME, 'cpp', 'module'),
-        so_destination_path=os.path.join(PACKAGE_NAME, 'cpp', 'module'),
-        include_files_destination_path=os.path.join(sys.prefix, 'include',  f'python{PYTHON_VERSION}', 'sgs')
+        cmake_lists_path=os.path.join(PACKAGE_CPP_NAME, 'module'),
+        so_destination_path=os.path.join(PACKAGE_NAME, 'cpp'),
+        include_files_path=None,
+        is_package=True
     )
 ]
 
 
 class BuildCMakeExt(build_ext):
-    """
-    Builds using cmake instead of the python setuptools implicit build
-    """
-
     def run(self):
-        """
-        Perform build_cmake before doing the 'normal' stuff
-        """
         self.distribution.data_files = []
         for extension in self.extensions:
             print(f"[BUILD] \"{extension.name}\": Building", file=sys.stdout)
             self.build_cmake(extension)
             self.distribution.extension = extension
+            self.run_command('install_headers')
             self.run_command('install_lib')
 
     def build_cmake(self, extension: Extension):
-        """
-        The steps required to build the extension
-        """
         print(f"[BUILD] \"{extension.name}\": Preparing the build environment", file=sys.stdout)
         build_dir = pathlib.Path(self.build_temp)
         extension_path = pathlib.Path(self.get_ext_fullpath(extension.name))
         os.makedirs(build_dir, exist_ok=True)
         os.makedirs(extension_path.parent.absolute(), exist_ok=True)
-        # Now that the necessary directories are created, build
         print(f"[BUILD] \"{extension.name}\": Configuring cmake project", file=sys.stdout)
-        # Change your cmake arguments below as necessary
-        # Below is just an example set of arguments for building Blender as a Python module
         self.spawn(['cmake', f'-H{extension.cmake_lists_path}', f'-B{extension_path}'])
         print(f"[BUILD] \"{extension.name}\": Building libraries", file=sys.stdout)
         self.spawn(["cmake", "--build", extension_path])
-        # Build finished, now copy the files into the copy directory
-        # We need to move the so files to the final destination
         libs = [
             so for so in
             os.listdir(extension_path) if
@@ -99,138 +83,81 @@ class BuildCMakeExt(build_ext):
                 os.remove(p)
             shutil.move(dst, p)
             print(f"[BUILD] \"{extension.name}\": Moved \"{dst}\" -> \"{build_dir}\"", file=sys.stdout)
-        # self.distribution.lib_dir = build_dir
         print(f"[BUILD] \"{extension.name}\": Removing \"{extension_path}\"", file=sys.stdout)
         shutil.rmtree(extension_path)
-        # After build_ext is run, the following commands will run:
-        # install_lib
-        # install_scripts
 
 
 class InstallCMakeLibs(install_lib):
-    """
-    Get the libraries from the parent distribution, use those as the outfiles
-
-    Skip building anything; everything is already built, forward libraries to
-    the installation step
-    """
-
     def run(self):
-        """
-        Copy libraries from the bin directory and place them as appropriate
-        """
         extension = self.distribution.extension
         print(f"[INSTALL_LIBS] \"{extension.name}\": Installing library", file=sys.stdout)
-        # We have already built the libraries in the previous build_ext step
         self.skip_build = True
         build_dir = pathlib.Path(self.get_finalized_command('build').build_temp)
         lib_dir = self.get_finalized_command('build').build_lib
         print(f"[INSTALL_LIBS] \"{extension.name}\": Getting libraries from \"{build_dir}\"", file=sys.stdout)
-        # Depending on the files that are generated from your cmake
-        # build chain, you may need to change the below code, such that
-        # your files are moved to the appropriate location when the installation
-        # is run
-        install_files = []
         extensions = []
         for lib in os.listdir(build_dir):
             for ext in cmake_extensions:
                 if lib.startswith(ext.name):
                     extensions.append((lib, ext, ))
+        tmp_data_files_dir: str = os.path.join('build', 'tmp', 'data', 'lib')
+        os.makedirs(tmp_data_files_dir, exist_ok=True)
         for libname, ext in extensions:
-            os.makedirs(ext.so_destination_path, exist_ok=True)
-            final_path = ''
-            dest_path = ''
-            if os.path.isabs(ext.so_destination_path):
-                final_path = os.path.join(ext.so_destination_path, libname)
-                # its a so library
-                if os.path.exists(final_path):
-                    os.remove(final_path)
-                dest_path = os.path.join(build_dir, libname)
-                shutil.move(dest_path, final_path)
-            else:
+            install_path = ''
+            src_path = ''
+            if extension.is_package:
                 # its a compiled c++ wrapper
-                final_path = os.path.join(lib_dir, ext.so_destination_path)
-                os.makedirs(final_path, exist_ok=True)
-                final_path = os.path.join(final_path, libname)
-                dest_path = os.path.join(build_dir, libname)
-                shutil.move(dest_path, final_path)
-            self.distribution.data_files.append(final_path)
-            include_path = os.path.join(os.path.join(lib_dir, ext.cmake_lists_path), 'include')
-            if os.path.exists(include_path):
-                print(f"[INSTALL_LIBS] \"{ext.name}\": Copying \"{include_path}\" contents into \"{INCLUDE_DEST}\"", file=sys.stdout)
-                for filename in glob.iglob(include_path + '/**/*', recursive=True):
-                    dst = filename.replace(include_path, INCLUDE_DEST)
-                    self.distribution.data_files.append(os.path.abspath(dst))
-                    if os.path.isdir(filename):
-                        os.makedirs(dst, exist_ok=True)
-                    else:
-                        self.copy_file(filename, dst)
-                shutil.rmtree(include_path, ignore_errors=True)
-            print(f"[INSTALL_LIBS] \"{ext.name}\": Moved \"{dest_path}\" -> \"{final_path}\"", file=sys.stdout)
-        # Mark the libs for installation, adding them to 
-        # distribution.data_files seems to ensure that setuptools' record 
-        # writer appends them to installed-files.txt in the package's egg-info
-        # shutil.rmtree(build_dir, ignore_errors=True)
-        print(f"[INSTALL_LIBS] \"{self.distribution.extension.name}\": Registering install files", file=sys.stdout)
-        # Must be forced to run after adding the libs to data_files
-        self.distribution.run_command("install_data")
+                install_path = os.path.join(lib_dir, ext.so_destination_path)
+                os.makedirs(install_path, exist_ok=True)
+                install_path = os.path.join(install_path, libname)
+                src_path = os.path.join(build_dir, libname)
+                shutil.move(src_path, install_path)
+            else:
+                # its a so library
+                install_path = ext.so_destination_path
+                tmp_install_path: str = os.path.join(tmp_data_files_dir, libname)
+                if os.path.exists(tmp_install_path):
+                    os.remove(tmp_install_path)
+                shutil.move(os.path.join(build_dir, libname), tmp_install_path)
+                self.distribution.data_files.append((install_path, [tmp_install_path]))
         super().run()
 
 
-class InstallCMakeLibsData(install_data):
-    """
-    Just a wrapper to get the install data into the egg-info
+def is_dev_install() -> bool:
+    # Check if a specific dev package is installed
+    has_error: False
+    with open('dev-requirements.txt', 'r') as f:
+        for package in f:
+            name, ver = tuple(package.split('>='))
+            try:
+                mod: ModuleType = importlib.import_module(name)
+                if version.parse(mod.__version__) < version.parse(ver):
+                    raise Exception(f'DEV Dependency {name} not satisfied: required {version}, got {mod.__version__}')
+            except Exception as e:
+                print(str(e), file=sys.stdout)
+                has_error = True
+    return not has_error
 
-    Listing the installed files in the egg-info guarantees that
-    all of the package files will be uninstalled when the user
-    uninstalls your package through pip
-    """
 
+class InstallCMakeHeaders(install_headers):
     def run(self):
-        """
-        Outfiles are the libraries that were built using cmake
-        """
-        self.skip_build = True
-        extension = self.distribution.extension
-        print(f"[INSTALL_DATA] \"{extension.name}\": Registering outfiles", file=sys.stdout)
-        self.outfiles += self.distribution.data_files
-
-
-# class InstallCMakeScripts(install_scripts):
-#     """
-#     Install the scripts in the build dir
-#     """
-# 
-#     def run(self):
-#         """
-#         Copy the required directory to the build directory and super().run()
-#         """
-# 
-#         self.announce("Moving scripts files", level=3)
-# 
-#         # Scripts were already built in a previous step
-# 
-#         self.skip_build = True
-# 
-#         bin_dir = self.distribution.bin_dir
-# 
-#         scripts_dirs = [os.path.join(bin_dir, _dir) for _dir in
-#                         os.listdir(bin_dir) if
-#                         os.path.isdir(os.path.join(bin_dir, _dir))]
-# 
-#         for scripts_dir in scripts_dirs:
-# 
-#             shutil.move(scripts_dir,
-#                         os.path.join(self.build_dir,
-#                                      os.path.basename(scripts_dir)))
-# 
-#         # Mark the scripts for installation, adding them to 
-#         # distribution.scripts seems to ensure that the setuptools' record 
-#         # writer appends them to installed-files.txt in the package's egg-info
-# 
-#         self.distribution.scripts = scripts_dirs
-# 
-# #         super().run()
+        paths: Optional[tuple[str, str]] = self.distribution.extension.include_files_path
+        if paths is None:
+            super().run()
+            return
+        print(f"[INSTALL_HEADERS] \"{self.distribution.extension.name}\": Installing headers", file=sys.stdout)
+        src, dest = paths
+        data_files = []
+        base: Optional[str] = None
+        for root, _, _ in os.walk(src):
+            base = root if base is None else base
+            files_and_directories = glob(os.path.join(root, "*"))
+            if files_and_directories:
+                files = [f for f in files_and_directories if os.path.isfile(f)]
+                if len(files) > 0:
+                    data_files.append((root.replace(base, dest), files))
+        self.distribution.data_files += data_files
+        super().run()
 
 
 setup(
@@ -239,8 +166,7 @@ setup(
     cmdclass={
         'build_ext': BuildCMakeExt,
         'install_lib': InstallCMakeLibs,
-        'install_data': InstallCMakeLibsData,
-        # 'install_scripts': InstallCMakeScripts,
+        'install_headers': InstallCMakeHeaders
     },
     include_package_data=True
 )

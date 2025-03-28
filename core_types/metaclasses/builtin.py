@@ -7,7 +7,7 @@ from pydantic_core import\
     core_schema
 from pydantic import\
     GetCoreSchemaHandler
-from core_types.cpp.module.wrapper import ct_pybind_base
+from core_types.cpp.wrapper import ct_pybind_base
 from ..constraint import\
     LogicOperand,\
     literal,\

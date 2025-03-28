@@ -1,4 +1,4 @@
-from .cpp.module import wrapper as bw
+from .cpp import wrapper as bw
 from .metaclasses.builtin import builtin
 
 
