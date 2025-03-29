@@ -1,6 +1,7 @@
 from setuptools import find_packages, setup, Extension
 from setuptools.command.build_ext import build_ext
 from setuptools.command.install_lib import install_lib
+from distutils.command.install_data import install_data
 from distutils.command.install_headers import install_headers
 import struct
 import sys
@@ -9,9 +10,7 @@ import os
 import shutil
 from typing import Optional
 from glob import glob
-import importlib.metadata
-from types import ModuleType
-from packaging import version
+import subprocess as sp
 
 
 BITS = struct.calcsize("P") * 8
@@ -93,29 +92,28 @@ class BuildCMakeExt(build_ext):
 class InstallCMakeLibs(install_lib):
     def run(self):
         extension = self.distribution.extension
-        print(f"[INSTALL_LIBS] \"{extension.name}\": Installing library", file=sys.stdout)
+        print(f"[INSTALL_LIBS] \"{extension.name}\": Installing libraries", file=sys.stdout)
         self.skip_build = True
         build_dir = pathlib.Path(self.get_finalized_command('build').build_temp)
         lib_dir = self.get_finalized_command('build').build_lib
         print(f"[INSTALL_LIBS] \"{extension.name}\": Getting libraries from \"{build_dir}\"", file=sys.stdout)
-        extensions = []
+        libraries = []
         for lib in os.listdir(build_dir):
-            for ext in cmake_extensions:
-                if lib.startswith(ext.name):
-                    extensions.append((lib, ext, ))
-        for libname, ext in extensions:
+            if lib.startswith(extension.name):
+                libraries.append(lib)
+        for libname in libraries:
             install_path = ''
             src_path = ''
             if extension.is_package:
                 # its a compiled c++ wrapper
-                install_path = os.path.join(lib_dir, ext.so_destination_path)
+                install_path = os.path.join(lib_dir, extension.so_destination_path)
                 os.makedirs(install_path, exist_ok=True)
                 install_path = os.path.join(install_path, libname)
                 src_path = os.path.join(build_dir, libname)
                 shutil.move(src_path, install_path)
             else:
                 # its a so library
-                install_path = ext.so_destination_path
+                install_path = extension.so_destination_path
                 tmp_install_path: str = os.path.join(os.path.join(os.environ['BUILD_TMP_DATA_LIB_DIR'], libname))
                 if os.path.exists(tmp_install_path):
                     os.remove(tmp_install_path)
@@ -145,13 +143,44 @@ class InstallCMakeHeaders(install_headers):
         super().run()
 
 
+class InstallCMakeData(install_data):
+    def run(self):
+        print(f"[INSTALL_DATA] Setting library rpaths", file=sys.stdout)
+        package_exts: list[CMakeExtension] = [p for p in cmake_extensions if p.is_package]
+        library_exts: list[CMakeExtension] = [p for p in cmake_extensions if not p.is_package]
+        lib_dir = self.get_finalized_command('build').build_lib
+        binaries: list[str] = []
+        for install_path, data_file_paths in self.distribution.data_files:
+            for lib_ext in library_exts:
+                if install_path == lib_ext.so_destination_path:
+                    binaries += data_file_paths
+        for pkg_ext in package_exts:
+            install_path: str = os.path.join(lib_dir, pkg_ext.so_destination_path)
+            for w in os.listdir(install_path):
+                if w.startswith(pkg_ext.name):
+                    binaries.append(os.path.join(install_path, w))
+        for binary in binaries:
+            print(f'[INSTALL_DATA] Binary "{binary}" setting rpath', file=sys.stdout)
+            get_rpath_proc: sp.CompletedProcess = sp.run(['patchelf', '--print-rpath', binary], capture_output=True)
+            bin_rpath: str = str(get_rpath_proc.stdout).rstrip()
+            venv_lib_path: str = os.path.join(sys.prefix, 'lib', f'python{PYTHON_VERSION}', 'sgs')
+            if bin_rpath == '':
+                bin_rpath = venv_lib_path
+            else:
+                bin_rpath = f'{venv_lib_path}:{venv_lib_path}'
+            sp.run(['patchelf', '--set-rpath', bin_rpath, binary], check=True)
+            print(f'[INSTALL_DATA] Binary "{binary}" rpath set to "{bin_rpath}"', file=sys.stdout)
+        super().run()
+
+
 setup(
     packages=find_packages(),
     ext_modules=cmake_extensions,
     cmdclass={
         'build_ext': BuildCMakeExt,
         'install_lib': InstallCMakeLibs,
-        'install_headers': InstallCMakeHeaders
+        'install_headers': InstallCMakeHeaders,
+        'install_data': InstallCMakeData
     },
     include_package_data=True
 )
