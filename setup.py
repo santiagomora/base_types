@@ -1,58 +1,33 @@
 from setuptools import find_packages, setup, Extension
 from setuptools.command.build_ext import build_ext
 from setuptools.command.install_lib import install_lib
-from distutils.command.install_data import install_data
 from distutils.command.install_headers import install_headers
-import struct
 import sys
 import pathlib
 import os
 import shutil
 from typing import Optional
 from glob import glob
-import subprocess as sp
+import ast
 
 
-BITS = struct.calcsize("P") * 8
-PACKAGE_NAME = "core_types"
-PACKAGE_CPP_NAME = "core_types_cpp"
-PYTHON_VERSION = "3.12"
+def extract_module_from_path(module_name: str, path: str):
+    module_path = os.path.join(path, f'{module_name}.py')
+    with open(module_path, 'r') as f:
+        tree = ast.parse(f.read(), filename=module_path)
+    code_object = compile(tree, filename=module_name, mode='exec')
+    module = sys.modules.setdefault(module_name, type(sys)(module_name))
+    exec(code_object, module.__dict__)
+    return module
 
 
-class CMakeExtension(Extension):
-    def __init__(
-        self, *, name: str, cmake_lists_path: list[str], so_destination_path: str,
-        is_package: bool, include_files_path: Optional[tuple[str, str]]
-    ):
-        super().__init__(name=name, sources=[])
-        self.cmake_lists_path = cmake_lists_path
-        self.so_destination_path = so_destination_path
-        self.include_files_path = include_files_path
-        self.is_package = is_package
-
-
-cmake_extensions = [
-    CMakeExtension(
-        name='libcore_types',
-        cmake_lists_path=os.path.join(PACKAGE_CPP_NAME, 'lib'),
-        so_destination_path=os.path.join('lib',  f'python{PYTHON_VERSION}', 'sgs'),
-        include_files_path=(os.path.join(PACKAGE_CPP_NAME, 'lib', 'include'), os.path.join('include', f'python{PYTHON_VERSION}')),
-        is_package=False
-    ),
-    CMakeExtension(
-        name='wrapper',
-        cmake_lists_path=os.path.join(PACKAGE_CPP_NAME, 'module'),
-        so_destination_path=os.path.join(PACKAGE_NAME, 'cpp'),
-        include_files_path=None,
-        is_package=True
-    )
-]
+setup_config = extract_module_from_path('setup_configuration', 'core_types/_sgs_config/')
 
 
 class BuildCMakeExt(build_ext):
     def run(self):
         self.distribution.data_files = []
-        self.tmp_data_files_lib_dir: str = os.path.join(os.path.join(os.getcwd(), 'build', 'tmp', 'data'), 'lib')
+        self.tmp_data_files_lib_dir: str = os.path.join(os.getcwd(), setup_config.TMP_DATA_FILES_DIR, 'lib')
         os.makedirs(self.tmp_data_files_lib_dir, exist_ok=True)
         os.environ['BUILD_TMP_DATA_LIB_DIR'] = self.tmp_data_files_lib_dir
         for extension in self.extensions:
@@ -143,44 +118,13 @@ class InstallCMakeHeaders(install_headers):
         super().run()
 
 
-class InstallCMakeData(install_data):
-    def run(self):
-        print(f"[INSTALL_DATA] Setting library rpaths", file=sys.stdout)
-        package_exts: list[CMakeExtension] = [p for p in cmake_extensions if p.is_package]
-        library_exts: list[CMakeExtension] = [p for p in cmake_extensions if not p.is_package]
-        lib_dir = self.get_finalized_command('build').build_lib
-        binaries: list[str] = []
-        for install_path, data_file_paths in self.distribution.data_files:
-            for lib_ext in library_exts:
-                if install_path == lib_ext.so_destination_path:
-                    binaries += data_file_paths
-        for pkg_ext in package_exts:
-            install_path: str = os.path.join(lib_dir, pkg_ext.so_destination_path)
-            for w in os.listdir(install_path):
-                if w.startswith(pkg_ext.name):
-                    binaries.append(os.path.join(install_path, w))
-        for binary in binaries:
-            print(f'[INSTALL_DATA] Binary "{binary}" setting rpath', file=sys.stdout)
-            get_rpath_proc: sp.CompletedProcess = sp.run(['patchelf', '--print-rpath', binary], capture_output=True)
-            bin_rpath: str = str(get_rpath_proc.stdout).rstrip()
-            venv_lib_path: str = os.path.join(sys.prefix, 'lib', f'python{PYTHON_VERSION}', 'sgs')
-            if bin_rpath == '':
-                bin_rpath = venv_lib_path
-            else:
-                bin_rpath = f'{venv_lib_path}:{venv_lib_path}'
-            sp.run(['patchelf', '--set-rpath', bin_rpath, binary], check=True)
-            print(f'[INSTALL_DATA] Binary "{binary}" rpath set to "{bin_rpath}"', file=sys.stdout)
-        super().run()
-
-
 setup(
     packages=find_packages(),
-    ext_modules=cmake_extensions,
+    ext_modules=setup_config.cmake_extensions,
     cmdclass={
         'build_ext': BuildCMakeExt,
         'install_lib': InstallCMakeLibs,
-        'install_headers': InstallCMakeHeaders,
-        'install_data': InstallCMakeData
+        'install_headers': InstallCMakeHeaders
     },
     include_package_data=True
 )
