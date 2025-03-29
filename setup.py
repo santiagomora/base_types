@@ -21,7 +21,7 @@ def extract_module_from_path(module_name: str, path: str):
     return module
 
 
-setup_config = extract_module_from_path('setup_configuration', 'core_types/_sgs_config/')
+setup_config = extract_module_from_path('setup_configuration', os.path.join('core_types', '_sgs_config'))
 
 
 class BuildCMakeExt(build_ext):
