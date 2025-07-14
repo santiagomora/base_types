@@ -40,13 +40,14 @@ class BuildCMakeExt(build_ext):
     def build_cmake(self, extension: Extension):
         print(f"[BUILD] \"{extension.name}\": Preparing the build environment", file=sys.stdout)
         build_dir = pathlib.Path(self.build_temp)
-        extension_path = pathlib.Path(self.get_ext_fullpath(extension.name))
+        # extension_path = pathlib.Path(self.get_ext_fullpath(extension.name))
+        extension_path = pathlib.Path(os.path.join(extension.cmake_lists_path, 'build'))
         os.makedirs(build_dir, exist_ok=True)
-        os.makedirs(extension_path.parent.absolute(), exist_ok=True)
+        # os.makedirs(extension_path.parent.absolute(), exist_ok=True)
         print(f"[BUILD] \"{extension.name}\": Configuring cmake project", file=sys.stdout)
-        self.spawn(['cmake', f'-H{extension.cmake_lists_path}', f'-B{extension_path}'])
+        self.spawn(['cmake', f'-H{extension.cmake_lists_path}', f'-B{extension_path}', '-G', 'Ninja'])
         print(f"[BUILD] \"{extension.name}\": Building libraries", file=sys.stdout)
-        self.spawn(["cmake", "--build", extension_path])
+        self.spawn(["ninja", '-C', extension_path, '-d', 'explain'])
         libs = [
             so for so in
             os.listdir(extension_path) if
@@ -58,10 +59,10 @@ class BuildCMakeExt(build_ext):
             dst = os.path.join(extension_path, lib)
             if os.path.exists(p):
                 os.remove(p)
-            shutil.move(dst, p)
-            print(f"[BUILD] \"{extension.name}\": Moved \"{dst}\" -> \"{build_dir}\"", file=sys.stdout)
-        print(f"[BUILD] \"{extension.name}\": Removing \"{extension_path}\"", file=sys.stdout)
-        shutil.rmtree(extension_path)
+            shutil.copy(dst, p)
+            print(f"[BUILD] \"{extension.name}\": Copied \"{dst}\" -> \"{build_dir}\"", file=sys.stdout)
+        # print(f"[BUILD] \"{extension.name}\": Removing \"{extension_path}\"", file=sys.stdout)
+        # shutil.rmtree(extension_path)
 
 
 class InstallCMakeLibs(install_lib):
@@ -85,14 +86,14 @@ class InstallCMakeLibs(install_lib):
                 os.makedirs(install_path, exist_ok=True)
                 install_path = os.path.join(install_path, libname)
                 src_path = os.path.join(build_dir, libname)
-                shutil.move(src_path, install_path)
+                shutil.copy(src_path, install_path)
             else:
                 # its a so library
                 install_path = extension.so_destination_path
                 tmp_install_path: str = os.path.join(os.path.join(os.environ['BUILD_TMP_DATA_LIB_DIR'], libname))
                 if os.path.exists(tmp_install_path):
                     os.remove(tmp_install_path)
-                shutil.move(os.path.join(build_dir, libname), tmp_install_path)
+                shutil.copy(os.path.join(build_dir, libname), tmp_install_path)
                 self.distribution.data_files.append((install_path, [tmp_install_path]))
         super().run()
 
