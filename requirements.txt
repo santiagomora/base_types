@@ -8,3 +8,4 @@ pydantic_core>=2.27.2
 semver>=3.0.2
 typing_extensions>=4.12.2
 toml>=0.10.2
+git+ssh://git@distrib.sgs-devel.com/repo/core/core_cpp_packaging_tools.git@48039ba7a715a7dd4874d9642fd331ba12f1f2a4#egg=core_cpp_packaging_tools
